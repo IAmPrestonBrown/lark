@@ -734,9 +734,11 @@ impl Parser<'_> {
             return;
         }
         // `for` is a C11 keyword, so it arrives as FOR_KW, not as an identifier.
+        // Rule O-26 lets the interface carry arguments, so the word before
+        // `for` can be `Show<int>` rather than `Show`.
         if self.nth_word(skip, "impl")
             && self.nth(skip + 1) == IDENT
-            && self.nth(skip + 2) == FOR_KW
+            && self.nth(self.after_generic_args(skip + 2)) == FOR_KW
         {
             self.impl_def(exported);
             return;
@@ -854,6 +856,11 @@ impl Parser<'_> {
         }
         self.bump();
         self.name();
+        // Rule O-25. An interface takes parameters, and each set of arguments
+        // gives one method table, the way rule G-1 gives one record layout.
+        if self.at(L_ANGLE) {
+            self.generic_params();
+        }
         if self.at(L_CURLY) {
             self.bump();
             while !self.at_end() && !self.at(R_CURLY) {
@@ -887,8 +894,16 @@ impl Parser<'_> {
         }
         self.bump();
         self.name_ref();
+        // Rule O-26. `impl Show<int> for Buf<int>` names the instantiation on
+        // each side, and either side stands alone when it takes no parameters.
+        if self.at(L_ANGLE) {
+            self.generic_args();
+        }
         self.bump();
         self.name_ref();
+        if self.at(L_ANGLE) {
+            self.generic_args();
+        }
         if self.at(L_CURLY) {
             self.bump();
             while !self.at_end() && !self.at(R_CURLY) {
@@ -1401,6 +1416,44 @@ impl Parser<'_> {
             self.error(LK0102);
         }
         self.finish();
+    }
+
+    /// Returns the index after a balanced `<...>` that starts at `index`.
+    ///
+    /// The index comes back unchanged when no list starts there, so a caller
+    /// reads the same position whether the list is present or absent. The scan
+    /// counts a `>>` as two closes, because the lexer gives one token for it.
+    ///
+    /// The scan stops at a token that no argument list holds, so a comparison
+    /// never reads as a list. Rule L-6 gives the same answer in the grammar.
+    fn after_generic_args(&self, index: usize) -> usize {
+        if self.nth(index) != L_ANGLE {
+            return index;
+        }
+        let mut depth = 0usize;
+        let mut at = index;
+        loop {
+            match self.nth(at) {
+                L_ANGLE => depth += 1,
+                R_ANGLE => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return at + 1;
+                    }
+                }
+                SHR => {
+                    if depth <= 2 {
+                        return at + 1;
+                    }
+                    depth -= 2;
+                }
+                // A list holds a type, so anything that ends a statement or an
+                // item ends the scan as well.
+                SEMICOLON | L_CURLY | R_CURLY | EOF => return index,
+                _ => {}
+            }
+            at += 1;
+        }
     }
 
     /// Parses `<int, Person*>` at a use.

@@ -28,6 +28,19 @@ export iface Greet {
 }
 
 // The implementation. Self names Person here. (rule O-16)
+// A generic interface. Rule O-25 gives each set of arguments its own method
+// table, because the signature of a method changes with the arguments.
+iface Holder<T> {
+    T held(Self this);
+}
+
+// Rule O-26. The implementation names the instantiation it satisfies.
+impl Holder<int> for Person {
+    int held(Person this) {
+        return this.age;
+    }
+}
+
 impl Greet for Person {
     void say_hi(Person this) {
         stdio::printf("%s\n", this.name);

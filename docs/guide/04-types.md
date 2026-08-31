@@ -164,6 +164,27 @@ Nesting works, and the inner copy comes first in the emitted C.
 auto outer = new Box<Box<int>> { };
 ```
 
+## An interface with parameters
+
+An interface takes generic parameters, and each set of arguments is a separate
+interface.
+
+```c
+iface Seq<T> {
+    T get(Self this, int index);
+}
+
+impl Seq<int> for Counter { ... }
+impl Seq<char> for Letters { ... }
+```
+
+`Seq<int>` and `Seq<char>` each carry their own method table, because `get`
+returns a different type in each. Rule O-25 gives the reason, and rule O-26
+makes the implementation name the one it satisfies.
+
+A parameter and `Self` are independent. `Self` is the type that implements the
+interface, and a parameter is an argument the instantiation supplies.
+
 ## A generic that holds a managed field
 
 The `managed` marker goes on the generic, and each instantiation decides
@@ -211,6 +232,8 @@ Write it out when the reader would have to work for it.
 | O-18 | The receiver adapts to the form the method declares. |
 | O-19 | A concrete receiver gives a direct call. |
 | O-24 | An interface value holds a managed pointer, so it gets a slot. |
+| O-25 | An interface takes parameters, and each set of arguments is one interface. |
+| O-26 | An implementation names the instantiation it satisfies. |
 | G-1 | Each instantiation is emitted in the module that declares the generic. |
 | G-6 | A call with no argument list infers the arguments. |
 | G-11 | An instantiation that holds a managed field needs the `managed` marker. |

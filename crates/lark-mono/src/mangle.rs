@@ -66,8 +66,18 @@ pub fn argument(text: &str) -> String {
 /// Returns the C name of one instantiation. See rule X-5a.
 #[must_use]
 pub fn instance(module: &str, name: &str, arguments: &[String]) -> String {
+    format!("lk_{module}__{}", suffix(name, arguments))
+}
+
+/// Returns the part of an instantiation name that follows the module.
+///
+/// An interface names its instantiation everywhere a plain interface names
+/// itself, and every one of those places adds the module prefix of its own.
+/// See rule O-25.
+#[must_use]
+pub fn suffix(name: &str, arguments: &[String]) -> String {
     let mangled: String = arguments.iter().map(|text| argument(text)).collect();
-    format!("lk_{module}__{name}__{mangled}")
+    format!("{name}__{mangled}")
 }
 
 #[cfg(test)]

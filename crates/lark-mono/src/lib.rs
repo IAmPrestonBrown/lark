@@ -17,7 +17,8 @@ use lark_resolve::ModuleGraph;
 use lark_span::{SourceId, Span};
 use lark_syntax::SyntaxKind::{
     CALL_EXPR, DECL_SPECIFIERS, DECLARATION, DECLARATOR, FN_DEF, GENERIC_ARGS, GENERIC_PARAMS,
-    IDENT, NAME, NAME_EXPR, NAME_REF, PATH, STRUCT_BODY, STRUCT_DEF, TYPE_NAME, UNION_DEF,
+    IDENT, IFACE_DEF, NAME, NAME_EXPR, NAME_REF, PATH, STRUCT_BODY, STRUCT_DEF, TYPE_NAME,
+    UNION_DEF,
 };
 use lark_syntax::{SyntaxNode, child_tokens};
 
@@ -31,6 +32,8 @@ pub enum Kind {
     Record,
     /// A function.
     Function,
+    /// An interface. Rule O-25 gives each instantiation its own method table.
+    Interface,
 }
 
 /// One generic declaration.
@@ -184,6 +187,32 @@ fn read_generic(item: &SyntaxNode, module: &str, source: SourceId, program: &mut
     let exported = child_tokens(item)
         .find(|token| !token.kind().is_trivia())
         .is_some_and(|token| token.kind() == IDENT && token.text() == "export");
+
+    // Rule O-25. A generic interface is a declaration of its own, so it never
+    // reaches the specifier walk below.
+    if item.kind() == IFACE_DEF
+        && let Some(parameters) = parameter_names(item)
+        && let Some(name) = item
+            .children()
+            .find(|child| child.kind() == NAME)
+            .and_then(|node| node.first_token())
+            .map(|token| token.text().to_owned())
+    {
+        program.generics.insert(
+            name.clone(),
+            Generic {
+                name,
+                module: module.to_owned(),
+                source,
+                kind: Kind::Interface,
+                parameters,
+                node: item.clone(),
+                exported,
+                marked: false,
+            },
+        );
+        return;
+    }
 
     // A generic record sits inside the declaration specifiers.
     for specifiers in item

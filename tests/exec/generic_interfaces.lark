@@ -1,0 +1,70 @@
+// An interface that takes generic parameters.
+//
+// Rule O-25 gives each set of arguments its own method table, because the
+// signature of a method changes with the arguments. Rule O-26 points each
+// implementation at the instantiation it satisfies.
+// covers: O-25, O-26, O-27, O-19, O-20, G-1
+
+@import stdio
+
+managed struct Counter {
+    int value;
+}
+
+managed struct Letters {
+    char first;
+}
+
+// One interface, two instantiations. Each one needs its own table, because
+// `get` returns a different type in each.
+iface Seq<T> {
+    T get(Self this, int index);
+}
+
+impl Seq<int> for Counter {
+    int get(Counter this, int index) {
+        return this.value + index;
+    }
+}
+
+impl Seq<char> for Letters {
+    char get(Letters this, int index) {
+        return this.first +(char) index;
+    }
+}
+
+// Rule O-27. A parameter and `Self` are independent. `A` is an argument that
+// the instantiation supplies, and `Self` is the type that implements.
+iface Pairing<A, B> {
+    A left(Self this);
+    B right(Self this);
+}
+
+impl Pairing<int, char> for Counter {
+    int left(Counter this) {
+        return this.value * 2;
+    }
+
+    char right(Counter this) {
+        return 'z';
+    }
+}
+
+init int main(void) {
+    auto counter = new Counter { .value = 10 };
+    auto letters = new Letters { .first = 'a' };
+
+    // Rule O-19. A concrete receiver gives a direct call.
+    stdio::printf("direct %d %c\n", counter.get(5), letters.get(2));
+
+    // Rule O-20. An interface value carries the table of its instantiation.
+    Seq<int> numbers = counter;
+    Seq<char> alphabet = letters;
+    stdio::printf("dynamic %d %c\n", numbers.get(7), alphabet.get(3));
+
+    // A second interface over the same type, with two parameters. Rule O-27
+    // makes `A` and `B` arguments while `Self` stays `Counter`.
+    Pairing<int, char> both = counter;
+    stdio::printf("pair %d %c\n", both.left(), both.right());
+    return 0;
+}

@@ -1683,3 +1683,31 @@ and reclaims nothing. A collector that copies pays for what survives, and a
 collector that marks and sweeps pays for what dies.
 **Method:** No change. The benchmark table states the trade, and
 `docs/guide/08-tools.md` says which collector suits which shape of program.
+
+## D176 - An interface takes generic parameters
+**Status:** settled.
+**Reason:** `iface Seq<T>` did not parse. A standard library needs
+`Iterator<T>`, `Eq<T>`, and `Hash<T>`, so collections were blocked without it.
+**Method:** Rules O-25, O-26, and O-27. An instantiation of an interface joins
+the ones that rule G-1 already builds for a record and a function, so the
+monomorphizer gained one kind rather than a second mechanism.
+
+The emitter expands each generic interface into one interface per
+instantiation, with every parameter replaced, before anything reads the table.
+Every name that the emitter builds then comes from the instantiation, so the
+method table, the identity, the fat pointer type, and each thunk all agree.
+
+Four places read a name that the expansion changed: the forward declarations,
+the body of an implementation, the declaration of an interface value, and the
+type of a local. Each one resolves the written `Seq<int>` to the instantiation
+that rule X-5a names.
+
+## D177 - The recognizer for `impl` skips an argument list
+**Status:** settled.
+**Reason:** The parser took `impl IDENT for` as the shape of an implementation.
+`impl Seq<int> for Counter` did not match, so it fell through and parsed as a
+declaration, which reported a syntax error at the first argument.
+**Method:** Rule L-3 and rule O-26. The lookahead skips a balanced `<...>`
+between the name and the `for`. The scan counts a `>>` as two closes, and it
+stops at a token that no argument list holds, so a comparison never reads as a
+list.

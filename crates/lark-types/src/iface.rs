@@ -15,8 +15,9 @@ use std::collections::BTreeMap;
 use lark_diag::{Diagnostic, Diagnostics, LK0410, LK0411, LK0412, LK0413, LK0420, LK0421, LK0430};
 use lark_span::{SourceId, Span};
 use lark_syntax::SyntaxKind::{
-    DECL_SPECIFIERS, DECL_STMT, DECLARATION, DECLARATOR, FN_DEF, IDENT, IFACE_DEF, IFACE_METHOD,
-    IMPL_DEF, METHOD_EXPR, NAME, NAME_EXPR, NAME_REF, PARAM, PARAM_LIST, PATH, POINTER,
+    DECL_SPECIFIERS, DECL_STMT, DECLARATION, DECLARATOR, FN_DEF, GENERIC_ARGS, GENERIC_PARAMS,
+    IDENT, IFACE_DEF, IFACE_METHOD, IMPL_DEF, METHOD_EXPR, NAME, NAME_EXPR, NAME_REF, PARAM,
+    PARAM_LIST, PATH, POINTER, TYPE_NAME,
 };
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
@@ -57,6 +58,11 @@ pub struct Interface {
     pub exported: bool,
     /// Every function, in declaration order.
     pub methods: Vec<Method>,
+    /// The generic parameter names, in order. Empty for a plain interface.
+    ///
+    /// Rule O-25. Each set of arguments gives one method table, the way rule
+    /// G-1 gives one record layout.
+    pub parameters: Vec<String>,
     /// Where the name is written.
     pub span: Span,
 }
@@ -74,6 +80,11 @@ impl Interface {
 pub struct Implementation {
     /// The interface that the implementation satisfies.
     pub iface: String,
+    /// The arguments written after the interface name, as C text.
+    ///
+    /// Rule O-26. `impl Show<int> for Buf` names one instantiation, and the
+    /// emitter builds a method table for that one alone.
+    pub iface_args: Vec<String>,
     /// The type that it targets.
     pub target: String,
     /// Every function that it defines, by name.
@@ -150,10 +161,23 @@ fn read_interface(item: &SyntaxNode) -> Option<Interface> {
         .filter_map(|child| read_method(&child))
         .collect();
 
+    let parameters = item
+        .children()
+        .find(|child| child.kind() == GENERIC_PARAMS)
+        .map(|list| {
+            list.children()
+                .filter(|child| child.kind() == NAME)
+                .filter_map(|child| child.first_token())
+                .map(|token| token.text().to_owned())
+                .collect()
+        })
+        .unwrap_or_default();
+
     Some(Interface {
         name: name_token.text().to_owned(),
         exported,
         methods,
+        parameters,
         span: span_of(&name_token),
     })
 }
@@ -169,6 +193,26 @@ fn read_implementation(item: &SyntaxNode) -> Option<Implementation> {
         return None;
     };
 
+    // Rule O-26. The first argument list belongs to the interface, and it sits
+    // before the `for`, so the tree order decides which one this is.
+    let iface_args = item
+        .children()
+        .find(|child| child.kind() == GENERIC_ARGS)
+        .filter(|list| list.text_range().start() < target.text_range().start())
+        .map(|list| {
+            list.children()
+                .filter(|child| child.kind() == TYPE_NAME)
+                .map(|child| {
+                    let words: Vec<String> = lark_syntax::all_tokens(&child)
+                        .filter(|token| !token.kind().is_trivia())
+                        .map(|token| token.text().to_owned())
+                        .collect();
+                    words.join(" ")
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
     let methods = item
         .children()
         .filter(|child| child.kind() == FN_DEF)
@@ -176,6 +220,7 @@ fn read_implementation(item: &SyntaxNode) -> Option<Implementation> {
         .collect();
 
     Some(Implementation {
+        iface_args,
         iface: iface.text().to_owned(),
         target: target.text().to_owned(),
         methods,

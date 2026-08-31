@@ -16,19 +16,32 @@ use std::fmt::Write as _;
 
 use lark_types::iface::{Implementation, Interface, Interfaces, Receiver};
 
+/// Returns the base that every name of one interface is built on.
+///
+/// Rule O-25. A generic interface names its instantiation, and that name
+/// already carries the module, because rule X-5a puts it there. A plain
+/// interface carries only its own name, so the module joins it here.
+fn base(module: &str, iface: &str) -> String {
+    if iface.starts_with("lk_") {
+        iface.to_owned()
+    } else {
+        format!("lk_{module}__{iface}")
+    }
+}
+
 /// Returns the C name of the method table type for an interface.
 pub fn vtable_type(module: &str, iface: &str) -> String {
-    format!("lk_{module}__{iface}__vtable")
+    format!("{}__vtable", base(module, iface))
 }
 
 /// Returns the C name of the unique id for an interface.
 pub fn iface_id(module: &str, iface: &str) -> String {
-    format!("lk_{module}__{iface}__id")
+    format!("{}__id", base(module, iface))
 }
 
 /// Returns the C name of one method implementation.
 pub fn method_name(module: &str, iface: &str, target: &str, method: &str) -> String {
-    format!("lk_{module}__{iface}__{target}__{method}")
+    format!("{}__{target}__{method}", base(module, iface))
 }
 
 /// Returns the C name of the thunk for one method.
@@ -38,7 +51,7 @@ pub fn thunk_name(module: &str, iface: &str, target: &str, method: &str) -> Stri
 
 /// Returns the C name of one method table instance.
 pub fn vtable_name(module: &str, iface: &str, target: &str) -> String {
-    format!("lk_{module}__{iface}__{target}__vt")
+    format!("{}__{target}__vt", base(module, iface))
 }
 
 /// Returns the C name of the interface table of a type.

@@ -45,7 +45,7 @@ Small, known, and each one blocks nothing else.
 |---|---|
 | Every compilation runs through clang | **Done.** Rule F-7 |
 | A generic return type is not mangled in the frame | **Done.** Decision D168 |
-| A generic interface does not parse | Gap, found while planning |
+| A generic interface does not parse | **Done.** Rules O-25 to O-27. D176, D177 |
 | `auto` infers nothing from a call, a name, or a field | Gap, found while fixing the above. Moved to E2. |
 | Generational collector is slowest on three of five benchmarks | **Done.** Now fastest on three. D173, D174, D175 |
 | `lark-driver` tests write into the crate directory | **Not a defect.** The directory was stale, and no current test writes there. |
@@ -228,20 +228,7 @@ a standard library uses everywhere.
 
 ### Generic interfaces
 
-`iface Seq<T>` does not parse. Collections need it.
-
-```c
-export iface Iterator<T> {
-    bool next(Self this, gc T* out);
-}
-
-impl Iterator<int> for Range { ... }
-```
-
-| Rule | Statement |
-|---|---|
-| O-25 | An interface takes generic parameters. Its method table is per instantiation, the same way rule G-1 handles a generic record. |
-| O-26 | An implementation names the instantiation it satisfies. |
+**Done in E1.** Rules O-25, O-26, and O-27. See decisions D176 and D177.
 
 ### Reach
 

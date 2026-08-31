@@ -151,6 +151,99 @@ impl Emitted {
     }
 }
 
+/// Replaces every generic interface with one interface per instantiation.
+///
+/// Rule O-25. A method table holds one entry per method, and the signature of
+/// a method changes with the arguments, so `Seq<int>` and `Seq<char>` need two
+/// tables. The expansion names each one after its instantiation and puts the
+/// argument in every place the parameter stood.
+///
+/// Rule O-26 points each implementation at the instantiation it satisfies.
+fn expand_generic_interfaces(interfaces: &mut Interfaces, program: &Program, module: &str) {
+    let generic_names: Vec<String> = interfaces
+        .interfaces
+        .values()
+        .filter(|item| !item.parameters.is_empty())
+        .map(|item| item.name.clone())
+        .collect();
+    if generic_names.is_empty() {
+        return;
+    }
+
+    for name in &generic_names {
+        let Some(template) = interfaces.interfaces.remove(name) else {
+            continue;
+        };
+        for instance in program
+            .instances_of(module)
+            .iter()
+            .filter(|item| item.kind == Kind::Interface && &item.name == name)
+        {
+            let map: std::collections::BTreeMap<String, String> = template
+                .parameters
+                .iter()
+                .cloned()
+                .zip(
+                    instance
+                        .arguments
+                        .iter()
+                        .map(|text| generic_emit::strip_gc(text)),
+                )
+                .collect();
+            let expanded = lark_types::iface::Interface {
+                name: instance.mangled.clone(),
+                exported: template.exported,
+                methods: template
+                    .methods
+                    .iter()
+                    .map(|method| substitute_method(method, &map))
+                    .collect(),
+                parameters: Vec::new(),
+                span: template.span,
+            };
+            interfaces
+                .interfaces
+                .insert(expanded.name.clone(), expanded);
+        }
+    }
+
+    for item in &mut interfaces.implementations {
+        if generic_names.contains(&item.iface) {
+            item.iface = lark_mono::mangle::instance(module, &item.iface, &item.iface_args);
+        }
+    }
+}
+
+/// Returns one method with every generic parameter replaced.
+fn substitute_method(
+    method: &lark_types::iface::Method,
+    map: &std::collections::BTreeMap<String, String>,
+) -> lark_types::iface::Method {
+    let apply = |text: &String| -> String {
+        let words: Vec<String> = text
+            .split_inclusive(|c: char| !c.is_alphanumeric() && c != '_')
+            .map(|piece| {
+                let cut = piece
+                    .find(|c: char| !c.is_alphanumeric() && c != '_')
+                    .unwrap_or(piece.len());
+                let (word, rest) = piece.split_at(cut);
+                match map.get(word) {
+                    Some(argument) => format!("{argument}{rest}"),
+                    None => piece.to_owned(),
+                }
+            })
+            .collect();
+        words.concat()
+    };
+    lark_types::iface::Method {
+        name: method.name.clone(),
+        receiver: method.receiver,
+        parameters: method.parameters.iter().map(&apply).collect(),
+        result: apply(&method.result),
+        span: method.span,
+    }
+}
+
 /// Emits the C for one module.
 #[must_use]
 pub fn emit(
@@ -162,7 +255,10 @@ pub fn emit(
     let module = graph.get(id)?;
     let root = module.parse.syntax();
     let managed = lark_types::managed::collect(&root);
-    let interfaces = lark_types::iface::collect(&root);
+    let mut interfaces = lark_types::iface::collect(&root);
+    // Rule O-25. A generic interface has no C form, so each instantiation
+    // takes its place before anything reads the table.
+    expand_generic_interfaces(&mut interfaces, program, &module.name);
     let globals = lark_types::globals::collect(&root);
     let foreign = foreign::collect(graph);
     let uses_runtime = managed_emit::module_uses_runtime(&root, &managed)
@@ -596,17 +692,11 @@ impl Emitter<'_> {
                     let _ = writeln!(self.out, "{text};");
                 }
                 IMPL_DEF => {
-                    let names: Vec<String> = item
-                        .children()
-                        .filter(|child| child.kind() == NAME_REF)
-                        .filter_map(|child| child.first_token())
-                        .map(|token| token.text().to_owned())
-                        .collect();
-                    let [iface, target] = names.as_slice() else {
+                    let Some((iface, target)) = self.implementing_names(&item) else {
                         continue;
                     };
                     let previous = self.implementing.take();
-                    self.implementing = Some((iface.clone(), target.clone()));
+                    self.implementing = Some((iface, target));
                     for method in item.children().filter(|child| child.kind() == FN_DEF) {
                         let text = self.function_declaration(&method);
                         if text.trim().is_empty() {
@@ -855,8 +945,46 @@ impl Emitter<'_> {
     }
 
     /// Returns the name of every interface in scope.
+    ///
+    /// Rule O-25. The set holds each instantiation and the generic it came
+    /// from. A declaration writes `Seq<int>`, and the frame needs only to know
+    /// that a slot belongs there, so the written name is enough for it. The
+    /// emitter resolves the instantiation where it builds a C name.
     fn interface_names(&self) -> std::collections::BTreeSet<String> {
-        self.interfaces.interfaces.keys().cloned().collect()
+        let mut found: std::collections::BTreeSet<String> =
+            self.interfaces.interfaces.keys().cloned().collect();
+        found.extend(
+            self.program
+                .generics
+                .values()
+                .filter(|item| item.kind == Kind::Interface)
+                .map(|item| item.name.clone()),
+        );
+        found
+    }
+
+    /// Returns the instantiation that a declaration of an interface names.
+    ///
+    /// Rule O-25. `Seq<int> value` names one method table, and the name of
+    /// that table is what every emitted symbol is built on.
+    fn resolve_iface(&self, declaration: &SyntaxNode, iface: &str) -> String {
+        let Some(generic) = self.program.generic(iface) else {
+            return iface.to_owned();
+        };
+        if generic.kind != Kind::Interface {
+            return iface.to_owned();
+        }
+        let arguments: Vec<String> = declaration
+            .descendants()
+            .find(|child| child.kind() == GENERIC_ARGS)
+            .map(|list| {
+                list.children()
+                    .filter(|child| child.kind() == TYPE_NAME)
+                    .map(|child| lark_mono::type_text(&child))
+                    .collect()
+            })
+            .unwrap_or_default();
+        lark_mono::mangle::instance(&generic.module, iface, &arguments)
     }
 
     /// Writes one global block. See rules I-6 through I-10.
@@ -1003,8 +1131,12 @@ impl Emitter<'_> {
         let _ = write!(self.out, "/* lark: interface {} */", name.text());
     }
 
-    /// Writes the functions of one implementation. See rule O-16.
-    fn write_implementation(&mut self, item: &SyntaxNode) {
+    /// Returns the interface and the target that one `impl` names.
+    ///
+    /// Rule O-26. A generic interface has no C form, so the pair names the
+    /// instantiation that the `impl` satisfies. Every name that the emitter
+    /// builds from this pair then matches the tables that rule O-25 emits.
+    fn implementing_names(&self, item: &SyntaxNode) -> Option<(String, String)> {
         let names: Vec<String> = item
             .children()
             .filter(|child| child.kind() == NAME_REF)
@@ -1012,11 +1144,48 @@ impl Emitter<'_> {
             .map(|token| token.text().to_owned())
             .collect();
         let [iface, target] = names.as_slice() else {
+            return None;
+        };
+
+        let generic = self.program.generic(iface);
+        if generic.is_none_or(|item| item.kind != Kind::Interface) {
+            return Some((iface.clone(), target.clone()));
+        }
+
+        // The list before the `for` belongs to the interface.
+        let target_start = item
+            .children()
+            .filter(|child| child.kind() == NAME_REF)
+            .nth(1)
+            .map(|node| node.text_range().start());
+        let arguments: Vec<String> = item
+            .children()
+            .find(|child| {
+                child.kind() == GENERIC_ARGS
+                    && target_start.is_some_and(|start| child.text_range().start() < start)
+            })
+            .map(|list| {
+                list.children()
+                    .filter(|child| child.kind() == TYPE_NAME)
+                    .map(|child| lark_mono::type_text(&child))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let owner = generic.map_or(self.module.name.as_str(), |item| item.module.as_str());
+        Some((
+            lark_mono::mangle::instance(owner, iface, &arguments),
+            target.clone(),
+        ))
+    }
+
+    /// Writes the functions of one implementation. See rule O-16.
+    fn write_implementation(&mut self, item: &SyntaxNode) {
+        let Some((iface, target)) = self.implementing_names(item) else {
             return;
         };
 
         let previous = self.implementing.take();
-        self.implementing = Some((iface.clone(), target.clone()));
+        self.implementing = Some((iface, target));
         for method in item.children().filter(|child| child.kind() == FN_DEF) {
             self.out.push('\n');
             self.write_function(&method);
@@ -1050,7 +1219,7 @@ impl Emitter<'_> {
         }
 
         let previous_locals = std::mem::take(&mut self.locals);
-        self.locals = local_types(item);
+        self.locals = local_types(item, self.program);
         let previous_function =
             std::mem::replace(&mut self.current_function, names::declared_name(item));
 
@@ -1470,9 +1639,10 @@ impl Emitter<'_> {
             return false;
         };
         let names = self.interface_names();
-        let Some(iface) = frame::interface_name(&declaration, &names) else {
+        let Some(written) = frame::interface_name(&declaration, &names) else {
             return false;
         };
+        let iface = self.resolve_iface(&declaration, &written);
         let Some(value) = node.children().find(|child| child.kind() == NAME_EXPR) else {
             return false;
         };
@@ -1957,7 +2127,10 @@ fn callee_name(call: &SyntaxNode) -> Option<String> {
 ///
 /// The map holds the type name and whether the declaration is a pointer, which
 /// rule O-18 needs to adapt a receiver.
-fn local_types(item: &SyntaxNode) -> std::collections::BTreeMap<String, (String, bool)> {
+fn local_types(
+    item: &SyntaxNode,
+    program: &Program,
+) -> std::collections::BTreeMap<String, (String, bool)> {
     let mut found = std::collections::BTreeMap::new();
     for node in item.descendants() {
         let declaration = match node.kind() {
@@ -1978,7 +2151,24 @@ fn local_types(item: &SyntaxNode) -> std::collections::BTreeMap<String, (String,
             .children()
             .find(|child| child.kind() == NAME_REF)
             .and_then(|child| child.first_token())
-            .map(|token| token.text().to_owned());
+            .map(|token| token.text().to_owned())
+            // Rule O-25 and rule G-1. `Seq<int>` names one instantiation, and
+            // every table the emitter reads is keyed by that name.
+            .map(|name| match specifiers
+                .children()
+                .find(|child| child.kind() == GENERIC_ARGS)
+            {
+                Some(list) => {
+                    let arguments: Vec<String> = list
+                        .children()
+                        .filter(|child| child.kind() == TYPE_NAME)
+                        .map(|child| lark_mono::type_text(&child))
+                        .collect();
+                    let written = format!("{name}<{}>", arguments.join(", "));
+                    lark_mono::resolve(program, &written)
+                }
+                None => name,
+            });
 
         // Rule T-10. An `auto` declaration takes its type from the initializer,
         // and rule O-17 needs that type to resolve a method call.

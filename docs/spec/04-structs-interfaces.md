@@ -186,3 +186,35 @@ object pointer when the runtime type is `T`, and a null pointer otherwise.
 
 **Rule O-24.** An interface value holds a managed pointer. The placement rules
 M-1 and M-2 apply to it.
+
+## 6. Generic interfaces
+
+**Rule O-25.** An interface takes generic parameters. Each set of arguments
+gives one method table, the way rule G-1 gives one record layout, because the
+signature of a method changes with the arguments.
+
+```c
+export iface Seq<T> {
+    T get(Self this, int index);
+}
+```
+
+`Seq<int>` and `Seq<char>` are two interfaces. Each one carries its own table
+type, its own identity, and its own fat pointer type, and rule X-5a names each
+one after its instantiation.
+
+**Rule O-26.** An implementation names the instantiation it satisfies. The
+target takes arguments of its own when it is generic.
+
+```c
+impl Seq<int> for Counter { ... }
+impl Seq<char> for Letters { ... }
+```
+
+An implementation of a generic interface follows every rule that governs a
+plain one. Rule O-13 counts the functions after substitution, and rule O-15
+puts the implementation with its interface or its type.
+
+**Rule O-27.** A parameter of the interface stands for a type inside every
+method signature, and `Self` still stands for the type that implements it. The
+two are independent: `Self` is the target, and a parameter is an argument.
