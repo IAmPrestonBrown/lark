@@ -1,0 +1,21 @@
+// The emitted C for a foreign call. Rule M-19 puts the thread in the safe
+// state around a `gc_safe` call, and rule M-20 leaves a `gc_leaf` call alone.
+// Rule M-21 makes an unmarked extern safe.
+// covers: M-19, M-20, M-21
+
+managed struct Person {
+    int age;
+}
+
+// Rule M-21. No marker, so the safe contract.
+int unmarked_extern(int value);
+
+gc_safe int marked_safe(int value);
+
+gc_leaf int marked_leaf(int value);
+
+init int main(void) {
+    gc Person* p = new Person { .age = 1 };
+    int total = unmarked_extern(1) + marked_safe(2) + marked_leaf(3);
+    return total + p->age;
+}

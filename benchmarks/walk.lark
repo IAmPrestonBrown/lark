@@ -1,0 +1,33 @@
+// Walk: build one long list, then read it many times.
+//
+// The build phase measures allocation. The read phase measures locality: a
+// collector that moves objects puts a list that was allocated in order back
+// into order, and a collector that does not leaves it where it was.
+
+@import stdio
+@import bench
+
+managed struct Cell {
+    gc Cell* next;
+    int value;
+}
+
+init int main(int argc, char** argv) {
+    int length = bench::bench_scale(argc, argv, 2000000, 100000);
+    double start = bench::bench_now();
+
+    gc Cell* head = 0;
+    for (int index = 0; index < length; index++) {
+        head = new Cell { .next = head, .value = index };
+    }
+
+    long long total = 0;
+    for (int round = 0; round < 20; round++) {
+        for (gc Cell* walk = head; walk != 0; walk = walk->next) {
+            total = total + (long long) walk->value;
+        }
+    }
+
+    bench::bench_report("walk", bench::bench_now() - start, total);
+    return 0;
+}

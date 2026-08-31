@@ -1,0 +1,12 @@
+# The Lark package for this repository, so `lark build examples/tour.lark`
+# works with no other setup.
+
+[package]
+name = "lark"
+version = "0.1.0"
+
+[build]
+runtime = "runtime"
+
+[paths]
+search = ["examples"]

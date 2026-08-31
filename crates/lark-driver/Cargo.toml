@@ -1,0 +1,28 @@
+[package]
+name = "lark-driver"
+description = "The Lark build pipeline: configuration, the passes, and the C compiler."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+lark-diag.workspace = true
+lark-syntax.workspace = true
+lark-cache.workspace = true
+lark-cpp.workspace = true
+lark-resolve.workspace = true
+lark-types.workspace = true
+lark-codegen.workspace = true
+lark-mono.workspace = true
+lark-pkg.workspace = true
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.1.4"
+
+[dev-dependencies]
+lark-mono.workspace = true
+lark-pkg.workspace = true
+
+[lints]
+workspace = true

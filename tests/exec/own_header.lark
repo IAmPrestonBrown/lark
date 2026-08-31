@@ -1,0 +1,22 @@
+// A module whose own header shares its name.
+//
+// Rule X-4b. The generated header is `own_header.lark.h`, so it never takes
+// the name of `own_header.h`, which the programmer wrote. Before the naming
+// rule, the emitted C included the generated header and every type in the real
+// one disappeared.
+// covers: X-4b, C-1, C-3a
+#include <stdio.h>
+#include "own_header.h"
+
+int label_length(const Label *item)
+{
+    return item->length;
+}
+
+int main(void)
+{
+    Label one = { .text = "gumbo", .length = 5 };
+    printf("label %s %d\n", one.text, label_length(&one));
+    printf("limit %d\n", LABEL_LIMIT);
+    return 0;
+}

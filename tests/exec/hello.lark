@@ -1,0 +1,17 @@
+// A fixture for test type T6.
+// The harness emits C, builds it, runs it, and compares the output.
+// It runs four times, once for each configuration in the matrix.
+// See principles P-3 and P-4.
+// covers: X-1, N-2
+
+@import stdio
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int main(void) {
+    stdio::printf("hello from exec\n");
+    stdio::printf("%d\n", add(20, 22));
+    return 0;
+}

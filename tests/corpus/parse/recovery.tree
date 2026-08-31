@@ -1,0 +1,61 @@
+SOURCE_FILE@0..199
+  LINE_COMMENT@0..77 "// The parser recovers and keeps every token, so invariant R holds even here."
+  WHITESPACE@77..79 "\n\n"
+  FN_DEF@79..133
+    DECL_SPECIFIERS@79..83
+      VOID_KW@79..83 "void"
+    WHITESPACE@83..84 " "
+    DECLARATOR@84..96
+      NAME@84..90
+        IDENT@84..90 "broken"
+      PARAM_LIST@90..96
+        L_PAREN@90..91 "("
+        PARAM@91..95
+          DECL_SPECIFIERS@91..95
+            VOID_KW@91..95 "void"
+          DECLARATOR@95..95
+        R_PAREN@95..96 ")"
+    WHITESPACE@96..97 " "
+    BLOCK_STMT@97..133
+      L_CURLY@97..98 "{"
+      WHITESPACE@98..103 "\n    "
+      DECL_STMT@103..112
+        DECLARATION@103..112
+          DECL_SPECIFIERS@103..106
+            INT_KW@103..106 "int"
+          WHITESPACE@106..107 " "
+          INIT_DECLARATOR@107..111
+            DECLARATOR@107..108
+              NAME@107..108
+                IDENT@107..108 "x"
+            WHITESPACE@108..109 " "
+            EQ@109..110 "="
+            WHITESPACE@110..111 " "
+            ERROR@111..111
+          SEMICOLON@111..112 ";"
+      WHITESPACE@112..115 "   "
+      LINE_COMMENT@115..131 "//~ ERROR LK0110"
+      WHITESPACE@131..132 "\n"
+      R_CURLY@132..133 "}"
+  WHITESPACE@133..135 "\n\n"
+  DECLARATION@135..161
+    DECL_SPECIFIERS@135..160
+      IDENT@135..137 "gc"
+      WHITESPACE@137..138 " "
+      NAME_REF@138..142
+        IDENT@138..142 "Data"
+      GENERIC_ARGS@142..160
+        L_ANGLE@142..143 "<"
+        TYPE_NAME@143..160
+          DECL_SPECIFIERS@143..146
+            INT_KW@143..146 "int"
+          WHITESPACE@146..147 " "
+          DECLARATOR@147..160
+            NAME@147..160
+              IDENT@147..160 "missing_angle"
+    SEMICOLON@160..161 ";"
+  WHITESPACE@161..164 "   "
+  LINE_COMMENT@164..180 "//~ ERROR LK0102"
+  WHITESPACE@180..181 "\n"
+  LINE_COMMENT@181..198 "//~^ ERROR LK0100"
+  WHITESPACE@198..199 "\n"

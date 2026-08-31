@@ -1,0 +1,28 @@
+// Rule L-5 tells the C storage class from type inference.
+// Rule L-6 tells a generic argument list from a comparison.
+// covers: L-5, L-6, L-7
+
+struct Data<T> {
+    T* data_point;
+}
+
+struct Box<T> {
+    T value;
+}
+
+// Rule M-1 keeps a managed pointer on the stack or in a `@global` block.
+@global module_globals {
+    gc Data<int>* count;
+    gc Box<Data<int>>* nested;
+}
+
+void f(void) {
+    auto inferred = 5;
+    auto int storage_class;
+
+    // `b` does not name a type, so this is a comparison.
+    int compared = a < b > (c);
+
+    // `int` is a type keyword, so this is a generic call.
+    swap<int>(&x, &y);
+}

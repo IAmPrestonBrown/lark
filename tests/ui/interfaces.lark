@@ -1,0 +1,49 @@
+// The interface rules from chapter 04.
+// covers: O-12, O-13, O-14, O-18
+
+managed struct Person {
+    int age;
+}
+
+managed struct Marker {
+    int flag;
+}
+
+struct Plain {              //~ ERROR LK0400
+    int x;
+}
+
+iface NoReceiver {
+    void broken(void);      //~ ERROR LK0430
+}
+
+iface Greet {
+    void say_hi(Self this);
+    void rename(gc Self* this);
+}
+
+impl Greet for Person {     //~ ERROR LK0410
+    void say_hi(Person this) { }
+    void extra(Person this) { } //~ ERROR LK0411
+}
+
+iface Mark {
+    void mark(Self this);
+}
+
+impl Mark for Plain {       //~ ERROR LK0412
+    void mark(Plain this) { }
+}
+
+iface Touch {
+    void touch(gc Self* this);
+}
+
+impl Touch for Marker {
+    void touch(gc Marker* this) { }
+}
+
+void stack_receiver(void) {
+    Marker local;
+    local.touch();          //~ ERROR LK0420
+}

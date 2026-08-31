@@ -1,0 +1,8 @@
+// The parser recovers and keeps every token, so invariant R holds even here.
+
+void broken(void) {
+    int x = ;   //~ ERROR LK0110
+}
+
+gc Data<int missing_angle;   //~ ERROR LK0102
+//~^ ERROR LK0100

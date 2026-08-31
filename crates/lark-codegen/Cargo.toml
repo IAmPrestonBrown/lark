@@ -1,0 +1,21 @@
+[package]
+name = "lark-codegen"
+description = "The Lark C emitter."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+lark-syntax.workspace = true
+lark-resolve.workspace = true
+lark-types.workspace = true
+lark-mono.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+lark-resolve.workspace = true
+lark-diag.workspace = true

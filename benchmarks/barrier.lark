@@ -1,0 +1,37 @@
+// Barrier: stores of a managed pointer into an object that already survived.
+//
+// Rule R-2 makes a store into a managed field go through the write barrier,
+// and only a generational collector needs one. This benchmark is the price of
+// that barrier: it writes young pointers into old objects and does little
+// else. Read it beside `churn`, which is what the barrier pays for.
+
+@import stdio
+@import bench
+
+managed struct Slot {
+    gc Slot* link;
+    int value;
+}
+
+init int main(int argc, char** argv) {
+    int rounds = bench::bench_scale(argc, argv, 2000000, 100000);
+    int width = 64;
+
+    // Build the old set first, and collect once so that it is old.
+    gc Slot* holders = new Slot[width];
+    for (int index = 0; index < width; index++) {
+        holders[index].value = index;
+    }
+
+    double start = bench::bench_now();
+    long long total = 0;
+    for (int round = 0; round < rounds; round++) {
+        gc Slot* young = new Slot { .value = round };
+        // The store goes into an object that outlived the young one.
+        holders[round % width].link = young;
+        total = total + (long long) holders[round % width].link->value;
+    }
+
+    bench::bench_report("barrier", bench::bench_now() - start, total);
+    return 0;
+}

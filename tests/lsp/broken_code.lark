@@ -1,0 +1,15 @@
+// The server answers on code that does not parse. Invariant R keeps every
+// token, and the parser always produces a tree, so a position lands on
+// something.
+// covers: L-13
+// lsp: completion
+
+managed struct Person {
+    gc char* name;
+}
+
+init int main(void) {
+    auto p = new Person { .name = "Ada" };
+    int x = ;
+    if (
+    p.<|>

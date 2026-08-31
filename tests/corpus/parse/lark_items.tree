@@ -1,0 +1,503 @@
+SOURCE_FILE@0..907
+  LINE_COMMENT@0..74 "// Every Lark item in one file. The snapshot shows the shape of each node."
+  WHITESPACE@74..75 "\n"
+  LINE_COMMENT@75..94 "// covers: L-1, L-2"
+  WHITESPACE@94..96 "\n\n"
+  IMPORT_DIRECTIVE@96..109
+    AT@96..97 "@"
+    IDENT@97..103 "import"
+    WHITESPACE@103..104 " "
+    NAME@104..109
+      IDENT@104..109 "stdio"
+  WHITESPACE@109..111 "\n\n"
+  DECLARATION@111..175
+    IDENT@111..117 "export"
+    WHITESPACE@117..118 " "
+    DECL_SPECIFIERS@118..175
+      STRUCT_DEF@118..175
+        IDENT@118..125 "managed"
+        WHITESPACE@125..126 " "
+        STRUCT_KW@126..132 "struct"
+        WHITESPACE@132..133 " "
+        NAME@133..139
+          IDENT@133..139 "Person"
+        WHITESPACE@139..140 " "
+        STRUCT_BODY@140..175
+          L_CURLY@140..141 "{"
+          WHITESPACE@141..146 "\n    "
+          FIELD_DECL@146..160
+            DECL_SPECIFIERS@146..153
+              IDENT@146..148 "gc"
+              WHITESPACE@148..149 " "
+              CHAR_KW@149..153 "char"
+            DECLARATOR@153..159
+              POINTER@153..154
+                STAR@153..154 "*"
+              WHITESPACE@154..155 " "
+              NAME@155..159
+                IDENT@155..159 "name"
+            SEMICOLON@159..160 ";"
+          WHITESPACE@160..165 "\n    "
+          FIELD_DECL@165..173
+            DECL_SPECIFIERS@165..168
+              INT_KW@165..168 "int"
+            WHITESPACE@168..169 " "
+            DECLARATOR@169..172
+              NAME@169..172
+                IDENT@169..172 "age"
+            SEMICOLON@172..173 ";"
+          WHITESPACE@173..174 "\n"
+          R_CURLY@174..175 "}"
+  WHITESPACE@175..177 "\n\n"
+  IFACE_DEF@177..283
+    IDENT@177..183 "export"
+    WHITESPACE@183..184 " "
+    IDENT@184..189 "iface"
+    WHITESPACE@189..190 " "
+    NAME@190..195
+      IDENT@190..195 "Greet"
+    WHITESPACE@195..196 " "
+    L_CURLY@196..197 "{"
+    WHITESPACE@197..202 "\n    "
+    IFACE_METHOD@202..225
+      DECL_SPECIFIERS@202..206
+        VOID_KW@202..206 "void"
+      WHITESPACE@206..207 " "
+      DECLARATOR@207..224
+        NAME@207..213
+          IDENT@207..213 "say_hi"
+        PARAM_LIST@213..224
+          L_PAREN@213..214 "("
+          PARAM@214..223
+            DECL_SPECIFIERS@214..218
+              NAME_REF@214..218
+                IDENT@214..218 "Self"
+            WHITESPACE@218..219 " "
+            DECLARATOR@219..223
+              NAME@219..223
+                IDENT@219..223 "this"
+          R_PAREN@223..224 ")"
+      SEMICOLON@224..225 ";"
+    WHITESPACE@225..230 "\n    "
+    IFACE_METHOD@230..281
+      DECL_SPECIFIERS@230..234
+        VOID_KW@230..234 "void"
+      WHITESPACE@234..235 " "
+      DECLARATOR@235..280
+        NAME@235..246
+          IDENT@235..246 "name_change"
+        PARAM_LIST@246..280
+          L_PAREN@246..247 "("
+          PARAM@247..260
+            DECL_SPECIFIERS@247..254
+              IDENT@247..249 "gc"
+              WHITESPACE@249..250 " "
+              NAME_REF@250..254
+                IDENT@250..254 "Self"
+            DECLARATOR@254..260
+              POINTER@254..255
+                STAR@254..255 "*"
+              WHITESPACE@255..256 " "
+              NAME@256..260
+                IDENT@256..260 "this"
+          COMMA@260..261 ","
+          WHITESPACE@261..262 " "
+          PARAM@262..279
+            DECL_SPECIFIERS@262..269
+              IDENT@262..264 "gc"
+              WHITESPACE@264..265 " "
+              CHAR_KW@265..269 "char"
+            DECLARATOR@269..279
+              POINTER@269..270
+                STAR@269..270 "*"
+              WHITESPACE@270..271 " "
+              NAME@271..279
+                IDENT@271..279 "new_name"
+          R_PAREN@279..280 ")"
+      SEMICOLON@280..281 ";"
+    WHITESPACE@281..282 "\n"
+    R_CURLY@282..283 "}"
+  WHITESPACE@283..285 "\n\n"
+  IMPL_DEF@285..486
+    IDENT@285..289 "impl"
+    WHITESPACE@289..290 " "
+    NAME_REF@290..295
+      IDENT@290..295 "Greet"
+    WHITESPACE@295..296 " "
+    FOR_KW@296..299 "for"
+    WHITESPACE@299..300 " "
+    NAME_REF@300..306
+      IDENT@300..306 "Person"
+    WHITESPACE@306..307 " "
+    L_CURLY@307..308 "{"
+    WHITESPACE@308..313 "\n    "
+    FN_DEF@313..387
+      DECL_SPECIFIERS@313..317
+        VOID_KW@313..317 "void"
+      WHITESPACE@317..318 " "
+      DECLARATOR@318..337
+        NAME@318..324
+          IDENT@318..324 "say_hi"
+        PARAM_LIST@324..337
+          L_PAREN@324..325 "("
+          PARAM@325..336
+            DECL_SPECIFIERS@325..331
+              NAME_REF@325..331
+                IDENT@325..331 "Person"
+            WHITESPACE@331..332 " "
+            DECLARATOR@332..336
+              NAME@332..336
+                IDENT@332..336 "this"
+          R_PAREN@336..337 ")"
+      WHITESPACE@337..338 " "
+      BLOCK_STMT@338..387
+        L_CURLY@338..339 "{"
+        WHITESPACE@339..348 "\n        "
+        EXPR_STMT@348..381
+          CALL_EXPR@348..380
+            NAME_EXPR@348..361
+              PATH@348..361
+                IDENT@348..353 "stdio"
+                COLON2@353..355 "::"
+                IDENT@355..361 "printf"
+            ARG_LIST@361..380
+              L_PAREN@361..362 "("
+              LITERAL_EXPR@362..368
+                STRING_LITERAL@362..368 "\"%s\\n\""
+              COMMA@368..369 ","
+              WHITESPACE@369..370 " "
+              FIELD_EXPR@370..379
+                NAME_EXPR@370..374
+                  NAME_REF@370..374
+                    IDENT@370..374 "this"
+                DOT@374..375 "."
+                NAME_REF@375..379
+                  IDENT@375..379 "name"
+              R_PAREN@379..380 ")"
+          SEMICOLON@380..381 ";"
+        WHITESPACE@381..386 "\n    "
+        R_CURLY@386..387 "}"
+    WHITESPACE@387..393 "\n\n    "
+    FN_DEF@393..484
+      DECL_SPECIFIERS@393..397
+        VOID_KW@393..397 "void"
+      WHITESPACE@397..398 " "
+      DECLARATOR@398..445
+        NAME@398..409
+          IDENT@398..409 "name_change"
+        PARAM_LIST@409..445
+          L_PAREN@409..410 "("
+          PARAM@410..425
+            DECL_SPECIFIERS@410..419
+              IDENT@410..412 "gc"
+              WHITESPACE@412..413 " "
+              NAME_REF@413..419
+                IDENT@413..419 "Person"
+            DECLARATOR@419..425
+              POINTER@419..420
+                STAR@419..420 "*"
+              WHITESPACE@420..421 " "
+              NAME@421..425
+                IDENT@421..425 "this"
+          COMMA@425..426 ","
+          WHITESPACE@426..427 " "
+          PARAM@427..444
+            DECL_SPECIFIERS@427..434
+              IDENT@427..429 "gc"
+              WHITESPACE@429..430 " "
+              CHAR_KW@430..434 "char"
+            DECLARATOR@434..444
+              POINTER@434..435
+                STAR@434..435 "*"
+              WHITESPACE@435..436 " "
+              NAME@436..444
+                IDENT@436..444 "new_name"
+          R_PAREN@444..445 ")"
+      WHITESPACE@445..446 " "
+      BLOCK_STMT@446..484
+        L_CURLY@446..447 "{"
+        WHITESPACE@447..456 "\n        "
+        EXPR_STMT@456..478
+          ASSIGN_EXPR@456..477
+            FIELD_EXPR@456..466
+              NAME_EXPR@456..460
+                NAME_REF@456..460
+                  IDENT@456..460 "this"
+              ARROW@460..462 "->"
+              NAME_REF@462..466
+                IDENT@462..466 "name"
+            WHITESPACE@466..467 " "
+            EQ@467..468 "="
+            WHITESPACE@468..469 " "
+            NAME_EXPR@469..477
+              NAME_REF@469..477
+                IDENT@469..477 "new_name"
+          SEMICOLON@477..478 ";"
+        WHITESPACE@478..483 "\n    "
+        R_CURLY@483..484 "}"
+    WHITESPACE@484..485 "\n"
+    R_CURLY@485..486 "}"
+  WHITESPACE@486..488 "\n\n"
+  GLOBAL_BLOCK@488..578
+    AT@488..489 "@"
+    IDENT@489..495 "global"
+    WHITESPACE@495..496 " "
+    NAME@496..508
+      IDENT@496..508 "main_globals"
+    WHITESPACE@508..509 " "
+    L_CURLY@509..510 "{"
+    WHITESPACE@510..515 "\n    "
+    DECLARATION@515..576
+      DECL_SPECIFIERS@515..524
+        IDENT@515..517 "gc"
+        WHITESPACE@517..518 " "
+        NAME_REF@518..524
+          IDENT@518..524 "Person"
+      INIT_DECLARATOR@524..575
+        DECLARATOR@524..533
+          POINTER@524..525
+            STAR@524..525 "*"
+          WHITESPACE@525..526 " "
+          NAME@526..533
+            IDENT@526..533 "person2"
+        WHITESPACE@533..534 " "
+        EQ@534..535 "="
+        WHITESPACE@535..536 " "
+        NEW_EXPR@536..575
+          IDENT@536..539 "new"
+          WHITESPACE@539..540 " "
+          TYPE_NAME@540..546
+            DECL_SPECIFIERS@540..546
+              NAME_REF@540..546
+                IDENT@540..546 "Person"
+          WHITESPACE@546..547 " "
+          INIT_LIST@547..575
+            L_CURLY@547..548 "{"
+            WHITESPACE@548..549 " "
+            DESIGNATED_INIT@549..562
+              DESIGNATOR@549..554
+                DOT@549..550 "."
+                NAME_REF@550..554
+                  IDENT@550..554 "name"
+              WHITESPACE@554..555 " "
+              EQ@555..556 "="
+              WHITESPACE@556..557 " "
+              LITERAL_EXPR@557..562
+                STRING_LITERAL@557..562 "\"Joe\""
+            COMMA@562..563 ","
+            WHITESPACE@563..564 " "
+            DESIGNATED_INIT@564..573
+              DESIGNATOR@564..568
+                DOT@564..565 "."
+                NAME_REF@565..568
+                  IDENT@565..568 "age"
+              WHITESPACE@568..569 " "
+              EQ@569..570 "="
+              WHITESPACE@570..571 " "
+              LITERAL_EXPR@571..573
+                INT_NUMBER@571..573 "37"
+            WHITESPACE@573..574 " "
+            R_CURLY@574..575 "}"
+      SEMICOLON@575..576 ";"
+    WHITESPACE@576..577 "\n"
+    R_CURLY@577..578 "}"
+  WHITESPACE@578..580 "\n\n"
+  GLOBAL_BLOCK@580..613
+    AT@580..581 "@"
+    IDENT@581..587 "global"
+    GLOBAL_ATTACH@587..596
+      L_PAREN@587..588 "("
+      NAME_REF@588..592
+        IDENT@588..592 "main"
+      COMMA@592..593 ","
+      WHITESPACE@593..594 " "
+      INT_NUMBER@594..595 "0"
+      R_PAREN@595..596 ")"
+    WHITESPACE@596..597 " "
+    NAME@597..610
+      IDENT@597..610 "other_globals"
+    WHITESPACE@610..611 " "
+    L_CURLY@611..612 "{"
+    R_CURLY@612..613 "}"
+  WHITESPACE@613..615 "\n\n"
+  DECLARATION@615..659
+    DECL_SPECIFIERS@615..627
+      IDENT@615..622 "gc_leaf"
+      WHITESPACE@622..623 " "
+      VOID_KW@623..627 "void"
+    WHITESPACE@627..628 " "
+    INIT_DECLARATOR@628..658
+      DECLARATOR@628..658
+        NAME@628..646
+          IDENT@628..646 "handle_opaque_data"
+        PARAM_LIST@646..658
+          L_PAREN@646..647 "("
+          PARAM@647..657
+            DECL_SPECIFIERS@647..651
+              VOID_KW@647..651 "void"
+            DECLARATOR@651..657
+              POINTER@651..652
+                STAR@651..652 "*"
+              WHITESPACE@652..653 " "
+              NAME@653..657
+                IDENT@653..657 "data"
+          R_PAREN@657..658 ")"
+    SEMICOLON@658..659 ";"
+  WHITESPACE@659..661 "\n\n"
+  FN_DEF@661..906
+    DECL_SPECIFIERS@661..670
+      IDENT@661..665 "init"
+      WHITESPACE@665..666 " "
+      VOID_KW@666..670 "void"
+    WHITESPACE@670..671 " "
+    DECLARATOR@671..681
+      NAME@671..675
+        IDENT@671..675 "main"
+      PARAM_LIST@675..681
+        L_PAREN@675..676 "("
+        PARAM@676..680
+          DECL_SPECIFIERS@676..680
+            VOID_KW@676..680 "void"
+          DECLARATOR@680..680
+        R_PAREN@680..681 ")"
+    WHITESPACE@681..682 " "
+    BLOCK_STMT@682..906
+      L_CURLY@682..683 "{"
+      WHITESPACE@683..688 "\n    "
+      INIT_STMT@688..707
+        AT@688..689 "@"
+        IDENT@689..693 "init"
+        WHITESPACE@693..694 " "
+        NAME_REF@694..706
+          IDENT@694..706 "main_globals"
+        SEMICOLON@706..707 ";"
+      WHITESPACE@707..712 "\n    "
+      DECL_STMT@712..771
+        DECLARATION@712..771
+          DECL_SPECIFIERS@712..716
+            AUTO_KW@712..716 "auto"
+          WHITESPACE@716..717 " "
+          INIT_DECLARATOR@717..770
+            DECLARATOR@717..724
+              NAME@717..724
+                IDENT@717..724 "preston"
+            WHITESPACE@724..725 " "
+            EQ@725..726 "="
+            WHITESPACE@726..727 " "
+            NEW_EXPR@727..770
+              IDENT@727..730 "new"
+              WHITESPACE@730..731 " "
+              TYPE_NAME@731..737
+                DECL_SPECIFIERS@731..737
+                  NAME_REF@731..737
+                    IDENT@731..737 "Person"
+              WHITESPACE@737..738 " "
+              INIT_LIST@738..770
+                L_CURLY@738..739 "{"
+                WHITESPACE@739..740 " "
+                DESIGNATED_INIT@740..757
+                  DESIGNATOR@740..745
+                    DOT@740..741 "."
+                    NAME_REF@741..745
+                      IDENT@741..745 "name"
+                  WHITESPACE@745..746 " "
+                  EQ@746..747 "="
+                  WHITESPACE@747..748 " "
+                  LITERAL_EXPR@748..757
+                    STRING_LITERAL@748..757 "\"Preston\""
+                COMMA@757..758 ","
+                WHITESPACE@758..759 " "
+                DESIGNATED_INIT@759..768
+                  DESIGNATOR@759..763
+                    DOT@759..760 "."
+                    NAME_REF@760..763
+                      IDENT@760..763 "age"
+                  WHITESPACE@763..764 " "
+                  EQ@764..765 "="
+                  WHITESPACE@765..766 " "
+                  LITERAL_EXPR@766..768
+                    INT_NUMBER@766..768 "18"
+                WHITESPACE@768..769 " "
+                R_CURLY@769..770 "}"
+          SEMICOLON@770..771 ";"
+      WHITESPACE@771..776 "\n    "
+      EXPR_STMT@776..793
+        METHOD_EXPR@776..792
+          NAME_EXPR@776..783
+            NAME_REF@776..783
+              IDENT@776..783 "preston"
+          DOT@783..784 "."
+          NAME_REF@784..790
+            IDENT@784..790 "say_hi"
+          ARG_LIST@790..792
+            L_PAREN@790..791 "("
+            R_PAREN@791..792 ")"
+        SEMICOLON@792..793 ";"
+      WHITESPACE@793..798 "\n    "
+      EXPR_STMT@798..834
+        METHOD_EXPR@798..833
+          NAME_EXPR@798..805
+            NAME_REF@798..805
+              IDENT@798..805 "preston"
+          DOT@805..806 "."
+          NAME_REF@806..817
+            IDENT@806..817 "name_change"
+          ARG_LIST@817..833
+            L_PAREN@817..818 "("
+            LITERAL_EXPR@818..832
+              STRING_LITERAL@818..832 "\"just preston\""
+            R_PAREN@832..833 ")"
+        SEMICOLON@833..834 ";"
+      WHITESPACE@834..839 "\n    "
+      DECL_STMT@839..868
+        DECLARATION@839..868
+          DECL_SPECIFIERS@839..846
+            IDENT@839..841 "gc"
+            WHITESPACE@841..842 " "
+            CHAR_KW@842..846 "char"
+          INIT_DECLARATOR@846..867
+            DECLARATOR@846..851
+              POINTER@846..847
+                STAR@846..847 "*"
+              WHITESPACE@847..848 " "
+              NAME@848..851
+                IDENT@848..851 "buf"
+            WHITESPACE@851..852 " "
+            EQ@852..853 "="
+            WHITESPACE@853..854 " "
+            NEW_ARRAY_EXPR@854..867
+              IDENT@854..857 "new"
+              WHITESPACE@857..858 " "
+              TYPE_NAME@858..862
+                DECL_SPECIFIERS@858..862
+                  CHAR_KW@858..862 "char"
+              L_BRACK@862..863 "["
+              LITERAL_EXPR@863..866
+                INT_NUMBER@863..866 "256"
+              R_BRACK@866..867 "]"
+          SEMICOLON@867..868 ";"
+      WHITESPACE@868..873 "\n    "
+      EXPR_STMT@873..904
+        CALL_EXPR@873..903
+          NAME_EXPR@873..891
+            NAME_REF@873..891
+              IDENT@873..891 "handle_opaque_data"
+          ARG_LIST@891..903
+            L_PAREN@891..892 "("
+            CAST_EXPR@892..902
+              L_PAREN@892..893 "("
+              TYPE_NAME@893..898
+                DECL_SPECIFIERS@893..897
+                  VOID_KW@893..897 "void"
+                DECLARATOR@897..898
+                  POINTER@897..898
+                    STAR@897..898 "*"
+              R_PAREN@898..899 ")"
+              NAME_EXPR@899..902
+                NAME_REF@899..902
+                  IDENT@899..902 "buf"
+            R_PAREN@902..903 ")"
+        SEMICOLON@903..904 ";"
+      WHITESPACE@904..905 "\n"
+      R_CURLY@905..906 "}"
+  WHITESPACE@906..907 "\n"

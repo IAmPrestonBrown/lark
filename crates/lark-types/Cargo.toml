@@ -1,0 +1,20 @@
+[package]
+name = "lark-types"
+description = "The Lark type system: type representation, checking, and inference."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+lark-diag.workspace = true
+lark-syntax.workspace = true
+lark-resolve.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+lark-mono.workspace = true
+lark-resolve.workspace = true

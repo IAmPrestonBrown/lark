@@ -1,0 +1,17 @@
+// The emitted C for a generic. Rule G-1 gives one definition per distinct
+// argument set. Rule G-10 gives a field map only to an instantiation that
+// holds a managed field.
+// covers: G-1, G-10, G-13, X-5a
+
+managed struct Person {
+    gc char* name;
+}
+
+managed struct Box<T> {
+    T value;
+}
+
+void uses(void) {
+    Box<int> plain;
+    gc Box<gc Person*>* boxed;
+}

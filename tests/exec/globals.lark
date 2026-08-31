@@ -1,0 +1,39 @@
+// Global blocks and the order they run in.
+// covers: I-1, I-2, I-6, I-7, I-8, I-9, I-10, I-12, I-13, I-14, I-15
+
+@import stdio
+
+managed struct Person {
+    gc char* name;
+    int age;
+}
+
+// A block with no attachment. The `@init` statement runs it.
+@global people {
+    gc Person* founder = new Person { .name = "Ada", .age = 36 };
+}
+
+// Rule I-14. An unnumbered block runs after every numbered one.
+@global(main) third {
+    int c = 3;
+}
+
+// Rule I-13. A lower number runs first.
+@global(main, 1) second {
+    int b = 2;
+}
+
+@global(main, 0) first {
+    int a = 1;
+}
+
+init int main(void) {
+    // The attached blocks already ran, in order.
+    stdio::printf("%d %d %d\n", a, b, c);
+
+    // Rule I-9. This block runs here, and rule I-10 makes a second call quiet.
+    @init people;
+    @init people;
+    stdio::printf("%s %d\n", founder->name, founder->age);
+    return 0;
+}

@@ -1,0 +1,11 @@
+// Rule N-2 requires the module prefix. Rule N-6 hides a private symbol.
+// covers: N-2, N-6
+
+@import shapes
+
+void uses_names(void) {
+    shapes::draw(0);            // exported, so this is quiet
+    shapes::internal_only();    //~ ERROR LK0611
+    shapes::absent();           //~ ERROR LK0611
+    other::thing();             //~ ERROR LK0613
+}

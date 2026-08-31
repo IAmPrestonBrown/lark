@@ -1,0 +1,14 @@
+// A library that `cross_module.lark` imports. It is not a fixture itself.
+
+export managed struct Circle {
+    int radius;
+    int weight;
+    int label;
+}
+
+export int area(gc Circle* c) {
+    return 3 * c->radius * c->radius;
+}
+
+// No `export`, so no other module sees this name. See rule N-6.
+int secret(void) { return 1; }

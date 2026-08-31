@@ -1,0 +1,5 @@
+// Rule N-3 finds a module on the search path. A name that no file provides is
+// LK0600.
+// covers: N-3
+
+@import modules_missing   //~ ERROR LK0600

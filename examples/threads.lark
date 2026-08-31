@@ -1,0 +1,27 @@
+// The parts of the Lark runtime that a program calls directly.
+//
+// Rule M-23 gives Lark no thread syntax. A thread comes from the host, and rule
+// M-24 makes it register with the runtime before it touches managed memory.
+
+// Rule M-24. A thread registers and unregisters itself.
+gc_leaf void lark_thread_attach(void);
+gc_leaf void lark_thread_detach(void);
+
+// A collection on demand. A test uses it to make the world stop.
+gc_safe void lark_collect(void);
+
+export void attach(void);
+export void detach(void);
+export void collect(void);
+
+void attach(void) {
+    lark_thread_attach();
+}
+
+void detach(void) {
+    lark_thread_detach();
+}
+
+void collect(void) {
+    lark_collect();
+}

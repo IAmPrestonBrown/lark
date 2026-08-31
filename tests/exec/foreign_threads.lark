@@ -1,0 +1,64 @@
+// Threads and foreign calls, in all four configurations.
+//
+// Two worker threads allocate while the main thread collects. Rule M-19 puts
+// each `gc_safe` call in the safe state, and rule M-26 stops the world.
+// covers: M-19, M-20, M-21, M-23, M-24, M-25, M-26
+
+@import stdio
+@import threads
+@import pthread
+
+managed struct Node {
+    gc Node* next;
+    int value;
+}
+
+// Every worker builds and drops a list, so the collector has real work.
+gc_leaf int build(int rounds);
+
+gc_leaf int build(int rounds) {
+    int total = 0;
+    for (int round = 0; round < rounds; round++) {
+        gc Node* head = 0;
+        for (int index = 0; index < 8; index++) {
+            head = new Node { .next = head, .value = index };
+        }
+        gc Node* walk = head;
+        while (walk != 0) {
+            total = total + 1;
+            walk = walk->next;
+        }
+    }
+    return total;
+}
+
+// A worker runs on its own thread, so it registers first. Rule M-24.
+void* worker(void* argument);
+
+void* worker(void* argument) {
+    threads::attach();
+    build(3);
+    threads::detach();
+    return argument;
+}
+
+init int main(void) {
+    // A pthread_t fits in a pointer sized slot on every supported target.
+    void* handles[2];
+
+    for (int index = 0; index < 2; index++) {
+        pthread::pthread_create(&handles[index], 0, (void*)worker, 0);
+    }
+
+    // The main thread collects while the workers allocate. Rule M-26.
+    for (int round = 0; round < 8; round++) {
+        threads::collect();
+    }
+
+    for (int index = 0; index < 2; index++) {
+        pthread::pthread_join(handles[index], 0);
+    }
+
+    stdio::printf("%d\n", build(3));
+    return 0;
+}

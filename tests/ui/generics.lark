@@ -1,0 +1,22 @@
+// The generic rules from chapter 05.
+// covers: G-2, G-6a, L-7
+
+int count;
+
+struct Data<T> {
+    T value;
+}
+
+int larger<T>(T a, T b) {
+    return 0;
+}
+
+void f(void) {
+    // Rule G-2. A generic argument is a type, and `count` is a value.
+    gc Data<count>* wrong;      //~ ERROR LK0502
+
+    // Rule G-6a. Version 1 needs the list.
+    larger(1, 2);               //~ ERROR LK0501
+
+    larger<int>(1, 2);
+}

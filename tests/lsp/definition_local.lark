@@ -1,0 +1,11 @@
+// The server finds where a name is declared.
+// covers: L-16
+// lsp: definition
+
+int helper(int value) {
+    return value;
+}
+
+int main(void) {
+    return helper<|>(1);
+}

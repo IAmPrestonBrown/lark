@@ -1,0 +1,47 @@
+// The shared part of every benchmark.
+//
+// A benchmark prints one tab separated row, so `run.sh` can build a table from
+// several runs. The row names the collector, so a reader can tell two runs
+// apart without tracking the order.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <lark_rt.h>
+
+// A monotonic clock, in seconds. A wall clock can move backward.
+export double bench_now(void) {
+    struct timespec moment;
+    clock_gettime(CLOCK_MONOTONIC, &moment);
+    return (double) moment.tv_sec + (double) moment.tv_nsec / 1e9;
+}
+
+// Returns the workload size that the command line asked for.
+//
+// A benchmark runs at a small size in the gate and at a full size by hand, so
+// the size is an argument rather than a constant. Each benchmark gives both
+// sizes, because one is not a fixed fraction of the other: a tree depth grows
+// the work exponentially and a loop count grows it linearly.
+export int bench_scale(int count, char** arguments, int full, int quick) {
+    for (int index = 1; index < count; index++) {
+        if (strcmp(arguments[index], "--quick") == 0) {
+            return quick;
+        }
+    }
+    return full;
+}
+
+// Prints one result row.
+//
+// `checksum` is the result of the work. Two rules follow from printing it. The
+// C compiler cannot delete work whose result reaches the output. Every
+// collector must print the same checksum for the same benchmark, so the suite
+// also proves that the four collectors agree.
+export void bench_report(const char* name, double seconds, long long checksum) {
+    lark_gc_stats stats = lark_gc_statistics();
+    printf("%s\t%s\t%.3f\t%zu\t%zu\t%zu\t%lld\n", lark_gc_name(), name,
+           seconds * 1000.0, stats.total_allocations, stats.collections,
+           stats.heap_bytes, checksum);
+    fflush(stdout);
+}

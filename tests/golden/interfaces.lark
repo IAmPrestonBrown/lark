@@ -1,0 +1,22 @@
+// The emitted C for an interface. Rule O-19 gives a direct call for a concrete
+// receiver, and rule O-18 adapts the receiver to the form the method declares.
+// covers: O-18, O-19, T-12
+
+managed struct Person {
+    int age;
+}
+
+iface Greet {
+    void by_value(Self this);
+    void by_pointer(gc Self* this);
+}
+
+impl Greet for Person {
+    void by_value(Person this) { }
+    void by_pointer(gc Person* this) { }
+}
+
+void calls(gc Person* p) {
+    p.by_value();
+    p.by_pointer();
+}

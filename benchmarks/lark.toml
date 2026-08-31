@@ -1,0 +1,17 @@
+# The benchmark package.
+#
+# A benchmark measures optimized code, so `opt` is 2 here and not the default
+# 0. The driver in `run.sh` overrides `gc.strategy` per run, which rule F-1
+# allows.
+
+[package]
+name = "benchmarks"
+version = "0.1.0"
+
+[build]
+opt = "2"
+debug = false
+runtime = "../runtime"
+
+[paths]
+search = [".", "../examples"]

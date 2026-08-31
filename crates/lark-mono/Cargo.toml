@@ -1,0 +1,17 @@
+[package]
+name = "lark-mono"
+description = "Monomorphization: one C definition per distinct set of type arguments."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+lark-diag.workspace = true
+lark-syntax.workspace = true
+lark-resolve.workspace = true
+lark-types.workspace = true
+
+[lints]
+workspace = true

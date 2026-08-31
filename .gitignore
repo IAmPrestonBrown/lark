@@ -1,0 +1,15 @@
+# Rust
+target/
+**/*.rs.bk
+
+# What a build produces. Every `build` directory holds generated files, and
+# `.lark-cache` holds object files keyed by content. See rule Y-2.
+build/
+.lark-cache/
+
+# Editor packages and fetched dependencies
+node_modules/
+*.vsix
+
+# macOS
+.DS_Store

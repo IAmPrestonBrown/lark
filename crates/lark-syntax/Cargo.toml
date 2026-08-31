@@ -1,0 +1,15 @@
+[package]
+name = "lark-syntax"
+description = "The Lark lexer, the lossless syntax tree, and the parser."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+lark-diag.workspace = true
+rowan = "0.17.0"
+
+[lints]
+workspace = true

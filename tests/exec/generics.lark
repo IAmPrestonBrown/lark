@@ -1,0 +1,58 @@
+// Generics end to end, in all four configurations.
+// covers: G-1, G-5, G-7, G-10, G-12, G-13
+
+@import stdio
+
+managed struct Person {
+    gc char* name;
+}
+
+// Rule G-10. The marker is visible here, and each instantiation decides.
+managed struct Box<T> {
+    T value;
+}
+
+struct Pair<A, B> {
+    A first;
+    B second;
+}
+
+int larger<T>(T a, T b) {
+    if (a > b) {
+        return 1;
+    }
+    return 0;
+}
+
+init int main(void) {
+    // No managed field after substitution, so no header and no field map.
+    Box<int> plain;
+    plain.value = 7;
+
+    // A managed field after substitution, so a header and a field map.
+    gc Box<gc Person*>* boxed = new Box<gc Person*> {
+        .value = new Person { .name = "Ada" }
+    };
+
+    Pair<int, int> point;
+    point.first = 3;
+    point.second = 4;
+
+    stdio::printf("%d %s %d\n", plain.value, boxed->value->name,
+                  point.first + point.second);
+    stdio::printf("%d %d\n", larger<int>(5, 3), larger<double>(1.5, 2.5));
+
+    // Rule G-1 with rule T-10. The inferred type must name the
+    // instantiation, because `Box<int>*` is no C type.
+    auto inferred = new Box<int> { .value = 11 };
+
+    // Rule G-1. An argument that is itself a generic names its own
+    // instantiation, and that instantiation comes first in the emitted C.
+    Pair<int, Box<int>> nested;
+    nested.first = 2;
+    nested.second.value = 13;
+
+    stdio::printf("%d %d %d\n", inferred->value, nested.first,
+                  nested.second.value);
+    return 0;
+}

@@ -1,0 +1,33 @@
+// A fixture for test type T9.
+// A managed parameter is a root. A collector that moves objects updates it
+// through the frame, so the callee never keeps a stale address.
+// covers: M-10a, T-1b
+
+@import stdio
+
+managed struct Wide { int first; int second; int third; }
+managed struct Holder { gc Wide* wide; gc Holder* next; }
+
+// The parameter is managed and the body allocates, so the parameter needs a
+// slot. Without one, every `Holder` written after a move points at the old
+// address of `wide`.
+int churn(gc Wide* wide, int count) {
+    gc Holder* head = 0;
+    for (int index = 0; index < count; index++) {
+        head = new Holder { .wide = wide, .next = head };
+    }
+    return head->wide->second;
+}
+
+// Rule T-1b. The `gc` marker in the specifiers of a function declarator
+// qualifies what the function returns.
+gc Wide* make(int base) {
+    return new Wide { .first = base, .second = base + 1, .third = base + 2 };
+}
+
+init int main(void) {
+    gc Wide* wide = make(11);
+    stdio::printf("second %d\n", churn(wide, 4000));
+    stdio::printf("made %d %d %d\n", wide->first, wide->second, wide->third);
+    return 0;
+}

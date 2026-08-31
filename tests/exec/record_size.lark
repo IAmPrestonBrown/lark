@@ -1,0 +1,42 @@
+// A managed record with no managed field still needs its true size.
+//
+// Rule M-5a. `lark_new` copies `size` bytes from the initializer, and the size
+// comes from the descriptor. A record that shared `lark_bytes_type` reported
+// one byte, so every field past the first byte was lost.
+// covers: M-5, M-5a
+
+@import stdio
+@import threads
+
+// No field is managed here, so the record needs no field map. It still needs a
+// descriptor, because the payload is much larger than one byte.
+managed struct Plain {
+    const char* label;
+    int first;
+    int second;
+    double third;
+}
+
+// One managed field, so this record needs a field map as well as a size.
+managed struct Traced {
+    gc Plain* inner;
+    int tag;
+}
+
+init int main(void) {
+    auto plain = new Plain {
+        .label = "plain",
+        .first = 11,
+        .second = 22,
+        .third = 3.5
+    };
+    stdio::printf("%s %d %d %.1f\n", plain->label, plain->first, plain->second, plain->third);
+
+    auto traced = new Traced { .inner = plain, .tag = 7 };
+    stdio::printf("%d %s %d\n", traced->tag, traced->inner->label, traced->inner->second);
+
+    // The collector must keep both objects, because the frame roots them.
+    threads::collect();
+    stdio::printf("%s %d %.1f\n", traced->inner->label, traced->inner->first, traced->inner->third);
+    return 0;
+}

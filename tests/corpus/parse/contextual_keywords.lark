@@ -1,0 +1,17 @@
+// Rule L-3 makes every Lark keyword contextual, and rule L-4 keeps it an
+// ordinary identifier everywhere else. This file is valid C, and every Lark
+// word appears as a plain name.
+// covers: L-3, L-4
+
+int new;
+int gc;
+int init;
+int impl;
+int iface;
+int managed;
+
+void f(void) {
+    new = 5;
+    gc = gc + 1;
+    init = impl + iface + managed;
+}

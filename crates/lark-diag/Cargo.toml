@@ -1,0 +1,13 @@
+[package]
+name = "lark-diag"
+description = "The Lark diagnostic catalogue, model, and renderer."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+
+[lints]
+workspace = true

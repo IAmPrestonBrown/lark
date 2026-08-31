@@ -1,0 +1,28 @@
+// The debugger prints a managed value as its type.
+//
+// Rule Z-5. The script reads the object header that rule M-4 puts before
+// every payload, so it needs no metadata that the compiler does not already
+// emit. Rule X-3 already maps every line back to this file.
+// covers: Z-5, M-4, M-5
+
+@import stdio
+
+managed struct Person {
+    gc char* name;
+    int age;
+}
+
+// The debugger stops here, so the test reads the values of `main`.
+gc_leaf void inspect(void);
+
+gc_leaf void inspect(void) {
+    return;
+}
+
+init int main(void) {
+    auto one = new Person { .name = "Ada", .age = 36 };
+    gc Person* team = new Person[3];
+    inspect();
+    stdio::printf("%d\n", one->age);
+    return 0;
+}

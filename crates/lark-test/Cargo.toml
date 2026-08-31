@@ -1,0 +1,26 @@
+[package]
+name = "lark-test"
+description = "The fixture test harness for the Lark compiler."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+lark-diag.workspace = true
+libtest-mimic = "0.8.2"
+lark-syntax.workspace = true
+lark-cpp.workspace = true
+lark-resolve.workspace = true
+lark-types.workspace = true
+lark-codegen.workspace = true
+lark-mono.workspace = true
+lark-lsp.workspace = true
+
+[lints]
+workspace = true
+
+[[test]]
+name = "fixtures"
+harness = false

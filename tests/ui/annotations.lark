@@ -1,0 +1,26 @@
+// A fixture for test type T4.
+// The annotations state what the compiler must report, and on which line.
+// The harness fails when a diagnostic is missing, unexpected, or on the
+// wrong line.
+// covers: T-5, O-2, T-9
+
+managed struct Person {
+    gc char* name;
+}
+
+struct Unmarked {       //~ ERROR LK0400
+    gc char* name;
+}
+
+gc_leaf void handle_opaque_data(void* data);
+
+void f(void) {
+    gc Person* person;
+    handle_opaque_data(person);         //~ ERROR LK0301
+    handle_opaque_data((void*)person);
+}
+
+void g(void) {
+    auto y;
+    //~^ ERROR LK0210
+}

@@ -1,0 +1,248 @@
+SOURCE_FILE@0..617
+  LINE_COMMENT@0..58 "// Rule L-5 tells the C storage class from type inference."
+  WHITESPACE@58..59 "\n"
+  LINE_COMMENT@59..119 "// Rule L-6 tells a generic argument list from a comparison."
+  WHITESPACE@119..120 "\n"
+  LINE_COMMENT@120..144 "// covers: L-5, L-6, L-7"
+  WHITESPACE@144..146 "\n\n"
+  DECLARATION@146..183
+    DECL_SPECIFIERS@146..183
+      STRUCT_DEF@146..183
+        STRUCT_KW@146..152 "struct"
+        WHITESPACE@152..153 " "
+        NAME@153..157
+          IDENT@153..157 "Data"
+        GENERIC_PARAMS@157..160
+          L_ANGLE@157..158 "<"
+          NAME@158..159
+            IDENT@158..159 "T"
+          R_ANGLE@159..160 ">"
+        WHITESPACE@160..161 " "
+        STRUCT_BODY@161..183
+          L_CURLY@161..162 "{"
+          WHITESPACE@162..167 "\n    "
+          FIELD_DECL@167..181
+            DECL_SPECIFIERS@167..168
+              NAME_REF@167..168
+                IDENT@167..168 "T"
+            DECLARATOR@168..180
+              POINTER@168..169
+                STAR@168..169 "*"
+              WHITESPACE@169..170 " "
+              NAME@170..180
+                IDENT@170..180 "data_point"
+            SEMICOLON@180..181 ";"
+          WHITESPACE@181..182 "\n"
+          R_CURLY@182..183 "}"
+  WHITESPACE@183..185 "\n\n"
+  DECLARATION@185..215
+    DECL_SPECIFIERS@185..215
+      STRUCT_DEF@185..215
+        STRUCT_KW@185..191 "struct"
+        WHITESPACE@191..192 " "
+        NAME@192..195
+          IDENT@192..195 "Box"
+        GENERIC_PARAMS@195..198
+          L_ANGLE@195..196 "<"
+          NAME@196..197
+            IDENT@196..197 "T"
+          R_ANGLE@197..198 ">"
+        WHITESPACE@198..199 " "
+        STRUCT_BODY@199..215
+          L_CURLY@199..200 "{"
+          WHITESPACE@200..205 "\n    "
+          FIELD_DECL@205..213
+            DECL_SPECIFIERS@205..206
+              NAME_REF@205..206
+                IDENT@205..206 "T"
+            WHITESPACE@206..207 " "
+            DECLARATOR@207..212
+              NAME@207..212
+                IDENT@207..212 "value"
+            SEMICOLON@212..213 ";"
+          WHITESPACE@213..214 "\n"
+          R_CURLY@214..215 "}"
+  WHITESPACE@215..217 "\n\n"
+  LINE_COMMENT@217..290 "// Rule M-1 keeps a managed pointer on the stack or in a `@global` block."
+  WHITESPACE@290..291 "\n"
+  GLOBAL_BLOCK@291..373
+    AT@291..292 "@"
+    IDENT@292..298 "global"
+    WHITESPACE@298..299 " "
+    NAME@299..313
+      IDENT@299..313 "module_globals"
+    WHITESPACE@313..314 " "
+    L_CURLY@314..315 "{"
+    WHITESPACE@315..320 "\n    "
+    DECLARATION@320..340
+      DECL_SPECIFIERS@320..332
+        IDENT@320..322 "gc"
+        WHITESPACE@322..323 " "
+        NAME_REF@323..327
+          IDENT@323..327 "Data"
+        GENERIC_ARGS@327..332
+          L_ANGLE@327..328 "<"
+          TYPE_NAME@328..331
+            DECL_SPECIFIERS@328..331
+              INT_KW@328..331 "int"
+            DECLARATOR@331..331
+          R_ANGLE@331..332 ">"
+      INIT_DECLARATOR@332..339
+        DECLARATOR@332..339
+          POINTER@332..333
+            STAR@332..333 "*"
+          WHITESPACE@333..334 " "
+          NAME@334..339
+            IDENT@334..339 "count"
+      SEMICOLON@339..340 ";"
+    WHITESPACE@340..345 "\n    "
+    DECLARATION@345..371
+      DECL_SPECIFIERS@345..362
+        IDENT@345..347 "gc"
+        WHITESPACE@347..348 " "
+        NAME_REF@348..351
+          IDENT@348..351 "Box"
+        GENERIC_ARGS@351..362
+          L_ANGLE@351..352 "<"
+          TYPE_NAME@352..361
+            DECL_SPECIFIERS@352..361
+              NAME_REF@352..356
+                IDENT@352..356 "Data"
+              GENERIC_ARGS@356..361
+                L_ANGLE@356..357 "<"
+                TYPE_NAME@357..360
+                  DECL_SPECIFIERS@357..360
+                    INT_KW@357..360 "int"
+                  DECLARATOR@360..360
+                R_ANGLE@360..361 ">"
+            DECLARATOR@361..361
+          R_ANGLE@361..362 ">"
+      INIT_DECLARATOR@362..370
+        DECLARATOR@362..370
+          POINTER@362..363
+            STAR@362..363 "*"
+          WHITESPACE@363..364 " "
+          NAME@364..370
+            IDENT@364..370 "nested"
+      SEMICOLON@370..371 ";"
+    WHITESPACE@371..372 "\n"
+    R_CURLY@372..373 "}"
+  WHITESPACE@373..375 "\n\n"
+  FN_DEF@375..616
+    DECL_SPECIFIERS@375..379
+      VOID_KW@375..379 "void"
+    WHITESPACE@379..380 " "
+    DECLARATOR@380..387
+      NAME@380..381
+        IDENT@380..381 "f"
+      PARAM_LIST@381..387
+        L_PAREN@381..382 "("
+        PARAM@382..386
+          DECL_SPECIFIERS@382..386
+            VOID_KW@382..386 "void"
+          DECLARATOR@386..386
+        R_PAREN@386..387 ")"
+    WHITESPACE@387..388 " "
+    BLOCK_STMT@388..616
+      L_CURLY@388..389 "{"
+      WHITESPACE@389..394 "\n    "
+      DECL_STMT@394..412
+        DECLARATION@394..412
+          DECL_SPECIFIERS@394..398
+            AUTO_KW@394..398 "auto"
+          WHITESPACE@398..399 " "
+          INIT_DECLARATOR@399..411
+            DECLARATOR@399..407
+              NAME@399..407
+                IDENT@399..407 "inferred"
+            WHITESPACE@407..408 " "
+            EQ@408..409 "="
+            WHITESPACE@409..410 " "
+            LITERAL_EXPR@410..411
+              INT_NUMBER@410..411 "5"
+          SEMICOLON@411..412 ";"
+      WHITESPACE@412..417 "\n    "
+      DECL_STMT@417..440
+        DECLARATION@417..440
+          DECL_SPECIFIERS@417..425
+            AUTO_KW@417..421 "auto"
+            WHITESPACE@421..422 " "
+            INT_KW@422..425 "int"
+          WHITESPACE@425..426 " "
+          INIT_DECLARATOR@426..439
+            DECLARATOR@426..439
+              NAME@426..439
+                IDENT@426..439 "storage_class"
+          SEMICOLON@439..440 ";"
+      WHITESPACE@440..446 "\n\n    "
+      LINE_COMMENT@446..499 "// `b` does not name a type, so this is a comparison."
+      WHITESPACE@499..504 "\n    "
+      DECL_STMT@504..531
+        DECLARATION@504..531
+          DECL_SPECIFIERS@504..507
+            INT_KW@504..507 "int"
+          WHITESPACE@507..508 " "
+          INIT_DECLARATOR@508..530
+            DECLARATOR@508..516
+              NAME@508..516
+                IDENT@508..516 "compared"
+            WHITESPACE@516..517 " "
+            EQ@517..518 "="
+            WHITESPACE@518..519 " "
+            CALL_EXPR@519..530
+              NAME_EXPR@519..526
+                NAME_REF@519..520
+                  IDENT@519..520 "a"
+                WHITESPACE@520..521 " "
+                GENERIC_ARGS@521..526
+                  L_ANGLE@521..522 "<"
+                  WHITESPACE@522..523 " "
+                  TYPE_NAME@523..525
+                    DECL_SPECIFIERS@523..524
+                      NAME_REF@523..524
+                        IDENT@523..524 "b"
+                    WHITESPACE@524..525 " "
+                    DECLARATOR@525..525
+                  R_ANGLE@525..526 ">"
+              WHITESPACE@526..527 " "
+              ARG_LIST@527..530
+                L_PAREN@527..528 "("
+                NAME_EXPR@528..529
+                  NAME_REF@528..529
+                    IDENT@528..529 "c"
+                R_PAREN@529..530 ")"
+          SEMICOLON@530..531 ";"
+      WHITESPACE@531..537 "\n\n    "
+      LINE_COMMENT@537..591 "// `int` is a type keyword, so this is a generic call."
+      WHITESPACE@591..596 "\n    "
+      EXPR_STMT@596..614
+        CALL_EXPR@596..613
+          NAME_EXPR@596..605
+            NAME_REF@596..600
+              IDENT@596..600 "swap"
+            GENERIC_ARGS@600..605
+              L_ANGLE@600..601 "<"
+              TYPE_NAME@601..604
+                DECL_SPECIFIERS@601..604
+                  INT_KW@601..604 "int"
+                DECLARATOR@604..604
+              R_ANGLE@604..605 ">"
+          ARG_LIST@605..613
+            L_PAREN@605..606 "("
+            PREFIX_EXPR@606..608
+              AMP@606..607 "&"
+              NAME_EXPR@607..608
+                NAME_REF@607..608
+                  IDENT@607..608 "x"
+            COMMA@608..609 ","
+            WHITESPACE@609..610 " "
+            PREFIX_EXPR@610..612
+              AMP@610..611 "&"
+              NAME_EXPR@611..612
+                NAME_REF@611..612
+                  IDENT@611..612 "y"
+            R_PAREN@612..613 ")"
+        SEMICOLON@613..614 ";"
+      WHITESPACE@614..615 "\n"
+      R_CURLY@615..616 "}"
+  WHITESPACE@616..617 "\n"

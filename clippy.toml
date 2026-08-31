@@ -1,0 +1,5 @@
+# Test code proves a failure by panicking. Rule C-2.3 bans a panic in library
+# code, not in a test.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true

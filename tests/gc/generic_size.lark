@@ -1,0 +1,38 @@
+// A fixture for test type T9.
+// An instantiation with no managed field still needs its own descriptor,
+// because the collector copies `size` bytes. A shared one byte descriptor
+// loses every field past the first byte under a collector that moves.
+// covers: G-13, M-5a, M-27
+
+@import stdio
+
+// No managed field after substitution, so rule G-13 builds an empty field
+// map. The descriptor must still give the real size.
+managed struct Wide<T> {
+    T first;
+    T second;
+    T third;
+}
+
+managed struct Holder {
+    gc Wide<int>* wide;
+    gc Holder* next;
+}
+
+// Allocates enough to force a collection, so a moving collector copies the
+// wide object at least once.
+gc Holder* churn(gc Wide<int>* wide, int count) {
+    gc Holder* head = 0;
+    for (int index = 0; index < count; index++) {
+        head = new Holder { .wide = wide, .next = head };
+    }
+    return head;
+}
+
+init int main(void) {
+    gc Wide<int>* wide = new Wide<int> { .first = 11, .second = 22, .third = 33 };
+    gc Holder* kept = churn(wide, 4000);
+    stdio::printf("wide %d %d %d\n", kept->wide->first, kept->wide->second,
+                  kept->wide->third);
+    return 0;
+}

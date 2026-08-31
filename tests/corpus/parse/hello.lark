@@ -1,0 +1,9 @@
+// A trivial fixture for test type T2.
+// It proves that the harness discovers a file, runs the front end, compares
+// the tree to a snapshot, and holds invariant R.
+
+@import stdio
+
+init void main(void) {
+    stdio::printf("hello\n");
+}

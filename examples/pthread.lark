@@ -1,0 +1,10 @@
+// The parts of POSIX threads that a Lark program calls.
+//
+// Rule M-23 says the runtime is thread safe and Lark adds no thread syntax.
+// A thread therefore comes through the C interface, like any other host
+// facility.
+
+// A thread handle is opaque to Lark, so a raw pointer holds it.
+export gc_safe int pthread_create(void* thread, void* attributes,
+                                  void* start, void* argument);
+export gc_safe int pthread_join(void* thread, void* result);

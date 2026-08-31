@@ -1,0 +1,46 @@
+// Binary trees: allocation and tracing of a live graph.
+//
+// The tree stays reachable while it is checked, so every collection during the
+// run traces the whole thing. This is the benchmark that a tracing collector
+// finds hardest, and the one where a large live set costs the most.
+
+@import stdio
+@import bench
+
+managed struct Tree {
+    gc Tree* left;
+    gc Tree* right;
+    int value;
+}
+
+gc Tree* make(int depth) {
+    if (depth <= 0) {
+        return new Tree { .value = 1 };
+    }
+    // Each half goes in a local first. A local is a root, and rule M-10 gives
+    // it a slot, so the first half survives while the second one allocates.
+    gc Tree* left = make(depth - 1);
+    gc Tree* right = make(depth - 1);
+    return new Tree { .left = left, .right = right, .value = depth };
+}
+
+long long check(gc Tree* node) {
+    if (node->left == 0) {
+        return (long long) node->value;
+    }
+    return (long long) node->value + check(node->left) + check(node->right);
+}
+
+init int main(int argc, char** argv) {
+    int depth = bench::bench_scale(argc, argv, 18, 12);
+    double start = bench::bench_now();
+
+    long long total = 0;
+    for (int round = 0; round < 4; round++) {
+        gc Tree* root = make(depth);
+        total = total + check(root);
+    }
+
+    bench::bench_report("trees", bench::bench_now() - start, total);
+    return 0;
+}

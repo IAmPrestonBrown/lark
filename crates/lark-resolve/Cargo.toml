@@ -1,0 +1,15 @@
+[package]
+name = "lark-resolve"
+description = "The Lark module graph, symbol tables, and name resolution."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+lark-diag.workspace = true
+lark-syntax.workspace = true
+
+[lints]
+workspace = true

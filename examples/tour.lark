@@ -1,0 +1,121 @@
+/*
+ * A tour of Lark. Every construct here follows docs/spec.
+ * This file is the reference example. The test suite compiles it.
+ */
+
+// C style include. It passes through to the emitted C. (rule C-3)
+#include <stdlib.h>
+
+// Lark module import. Every reference needs the stdio:: prefix. (rule N-2)
+@import stdio
+
+// A managed struct carries an object header, because it holds a gc field
+// and because an impl targets it. (rule O-2)
+export managed struct Person {
+    gc char* name;
+    int age;
+}
+
+// A generic struct. It is plain, not managed. (rule G-9)
+export struct Data<T> {
+    T* data_point;
+}
+
+// An interface. The receiver is written by the programmer. (rule O-10)
+export iface Greet {
+    void say_hi(Self this);
+    void name_change(gc Self* this, gc char* new_name);
+}
+
+// The implementation. Self names Person here. (rule O-16)
+impl Greet for Person {
+    void say_hi(Person this) {
+        stdio::printf("%s\n", this.name);
+    }
+
+    void name_change(gc Person* this, gc char* new_name) {
+        this->name = new_name;
+    }
+}
+
+// Globals hold zero at program start. @init runs the initializers. (rule I-7)
+@global main_globals {
+    gc Person* person2 = new Person {
+        .name = "Joe",           // a literal is assignable to gc char* (rule T-8)
+        .age  = 37
+    };
+}
+
+// This block attaches to main. The transpiler inserts its @init. (rule I-12)
+@global(main) globals_2 {}
+
+// Order number 0 runs before every unnumbered attached block. (rule I-13)
+@global(main, 0) other_globals {}
+
+// External declarations. gc_leaf is the opt in. An unmarked extern
+// is gc_safe. (rule M-21)
+gc_leaf void handle_opaque_data(void* data);
+gc_safe void handle_gc_managed(gc void* data);
+
+// The tour defines them, so the example links and runs.
+gc_leaf void handle_opaque_data(void* data) {
+    stdio::printf("opaque %d\n", data == 0);
+}
+
+gc_safe void handle_gc_managed(gc void* data) {
+    stdio::printf("managed %d\n", data == 0);
+}
+
+// Exactly one function carries init. Startup goes at its first
+// statement. C main stays the entry point. (rules I-1, I-2)
+init int main(void) {
+    @init main_globals;
+
+    // auto keeps gc, so preston is gc Person*. (rule T-10)
+    auto preston = new Person {
+        .name = "Preston Brown",
+        .age  = 18
+    };
+
+    // The receiver is Person by value, so the call derefs. (rule O-18)
+    preston.say_hi();
+
+    // The receiver is gc Person*, so the call passes the pointer.
+    preston.name_change("just preston");
+
+    gc Data<int>* count = new Data<int> {
+        .data_point = NULL
+    };
+
+    // handle_opaque_data(count);          // LK0301: no implicit crossing
+    handle_opaque_data((void*)count);      // correct
+
+    void* potentially_unmanaged = NULL;
+    // handle_gc_managed(potentially_unmanaged);        // LK0301
+    handle_gc_managed((gc void*)potentially_unmanaged); // correct
+
+    // An interior pointer into a managed buffer. (rule M-6)
+    gc char* buf = new char[256];
+    gc char* mid = &buf[3];
+    buf[3] = 'z';
+    stdio::printf("%c\n", mid[0]);
+
+    box_demo();
+    return 0;
+}
+
+// A conditionally managed generic. One declaration serves both cases.
+// (rule G-10)
+export managed struct Box<T> {
+    T value;
+}
+
+void box_demo(void) {
+    Box<int> a;                  // no header, plain C struct
+    a.value = 7;
+
+    gc Box<gc Person*>* b = new Box<gc Person*> {   // header, one gc field
+        .value = new Person { .name = "Grace", .age = 45 }
+    };
+    stdio::printf("%d %s\n", a.value, b->value->name);
+}

@@ -1,0 +1,18 @@
+[package]
+name = "lark-cpp"
+description = "Reads C headers through the platform preprocessor."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-cache.workspace = true
+lark-resolve.workspace = true
+lark-syntax.workspace = true
+
+[dev-dependencies]
+lark-types.workspace = true
+
+[lints]
+workspace = true

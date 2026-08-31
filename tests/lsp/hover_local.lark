@@ -1,0 +1,13 @@
+// The server says what a name is. Rule T-10 gives the type that `auto` infers.
+// covers: T-10
+// lsp: hover
+
+managed struct Person {
+    gc char* name;
+}
+
+init int main(void) {
+    auto preston = new Person { .name = "Ada" };
+    preston<|>;
+    return 0;
+}

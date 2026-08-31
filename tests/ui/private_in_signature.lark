@@ -1,0 +1,14 @@
+// Rule N-10 stops an exported signature from naming a private type.
+// covers: N-10
+
+struct Hidden {
+    int x;
+}
+
+export struct Shown {
+    int y;
+}
+
+export void leaks(gc Hidden* h);   //~ ERROR LK0610
+
+export void keeps(gc Shown* s);

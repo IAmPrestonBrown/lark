@@ -1,0 +1,10 @@
+// The server offers the exported names of an imported module.
+// Rule N-2 needs the prefix, and rule N-6 hides a private name.
+// covers: N-2, N-6
+// lsp: completion
+
+@import threads
+
+void uses(void) {
+    threads::<|>
+}

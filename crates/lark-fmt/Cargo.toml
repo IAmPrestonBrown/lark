@@ -1,0 +1,13 @@
+[package]
+name = "lark-fmt"
+description = "The Lark source formatter."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-syntax.workspace = true
+
+[lints]
+workspace = true

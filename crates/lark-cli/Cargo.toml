@@ -1,0 +1,24 @@
+[package]
+name = "lark-cli"
+description = "The lark command line tool."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "lark"
+path = "src/main.rs"
+
+[dependencies]
+lark-codegen.workspace = true
+lark-driver.workspace = true
+lark-fmt.workspace = true
+lark-pkg.workspace = true
+toml = "1.1.4"
+
+[dev-dependencies]
+lark-pkg.workspace = true
+
+[lints]
+workspace = true

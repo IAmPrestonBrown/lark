@@ -1,0 +1,2 @@
+# Rules with no test. See principle P-6 in docs/test-strategy.md.
+# The list must only shrink. Rewrite it with LARK_BLESS=1.

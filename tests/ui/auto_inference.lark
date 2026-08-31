@@ -1,0 +1,20 @@
+// Rule T-9 needs an initializer. Rule T-11 limits where `auto` can appear.
+// covers: T-9, T-11, L-5
+
+@global main_globals {
+    auto in_a_global_block = 5;
+}
+
+auto at_file_scope = 5;     //~ ERROR LK0211
+
+void takes_auto(auto p);    //~ ERROR LK0211
+
+struct HasAuto {
+    auto member;            //~ ERROR LK0211
+};
+
+void f(void) {
+    auto with_initializer = 5;
+    auto without;           //~ ERROR LK0210
+    auto int storage_class;
+}

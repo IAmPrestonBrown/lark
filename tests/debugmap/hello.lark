@@ -1,0 +1,17 @@
+// A fixture for test type T7.
+// The harness compares the map from the emitted C back to this file.
+
+@import stdio
+
+int first(void) {
+    return 1;
+}
+
+int second(void) {
+    return 2;
+}
+
+int main(void) {
+    stdio::printf("%d\n", first() + second());
+    return 0;
+}

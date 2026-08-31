@@ -1,0 +1,47 @@
+// Interfaces end to end, in all four configurations.
+// covers: O-9, O-10, O-11, O-13, O-16, O-17, O-18, O-19, O-20, O-22
+
+@import stdio
+
+export managed struct Person {
+    gc char* name;
+    int age;
+}
+
+export iface Greet {
+    void say_hi(Self this);
+    void rename(gc Self* this, gc char* fresh);
+    int years(Self this);
+}
+
+impl Greet for Person {
+    // Rule O-16. `Self` names Person here.
+    void say_hi(Self this) {
+        stdio::printf("%s is %d\n", this.name, this.age);
+    }
+
+    void rename(gc Self* this, gc char* fresh) {
+        this->name = fresh;
+    }
+
+    int years(Person this) {
+        return this.age;
+    }
+}
+
+init int main(void) {
+    gc Person* p = new Person { .name = "Ada", .age = 36 };
+
+    // Rule O-19. The concrete type gives a direct call.
+    p.say_hi();
+    p.rename("Grace");
+    p.say_hi();
+    stdio::printf("%d\n", p.years());
+
+    // Rules O-22 and O-20. The fat pointer dispatches through its table.
+    Greet g = p;
+    g.rename("Ada again");
+    g.say_hi();
+    stdio::printf("%d\n", g.years());
+    return 0;
+}

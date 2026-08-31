@@ -1,0 +1,39 @@
+// Churn: many short lived objects, and almost nothing kept.
+//
+// This is the shape that a generational collector is built for. Nearly every
+// object dies before the next collection, so a collector that only traces the
+// young set does much less work than one that traces the whole heap.
+
+@import stdio
+@import bench
+
+managed struct Cell {
+    gc Cell* next;
+    int value;
+}
+
+init int main(int argc, char** argv) {
+    int rounds = bench::bench_scale(argc, argv, 4000000, 200000);
+    double start = bench::bench_now();
+
+    long long total = 0;
+    gc Cell* kept = 0;
+    for (int index = 0; index < rounds; index++) {
+        // This one dies before the next iteration.
+        gc Cell* dead = new Cell { .value = index };
+        total = total + (long long) dead->value;
+
+        // One in a thousand survives, so the live set grows slowly.
+        if (index % 1000 == 0) {
+            kept = new Cell { .next = kept, .value = index };
+        }
+    }
+
+    // Read the kept list, so the collector cannot drop it early.
+    for (gc Cell* walk = kept; walk != 0; walk = walk->next) {
+        total = total + 1;
+    }
+
+    bench::bench_report("churn", bench::bench_now() - start, total);
+    return 0;
+}

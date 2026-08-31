@@ -1,0 +1,3 @@
+one     Person
+team    Person[3]
+stats   total_allocations 2

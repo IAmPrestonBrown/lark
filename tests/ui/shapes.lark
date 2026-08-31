@@ -1,0 +1,15 @@
+// A helper module for the module fixtures. It exports one type and keeps one
+// private.
+
+export struct Point {
+    int x;
+    int y;
+}
+
+struct Hidden {
+    int secret;
+}
+
+export void draw(gc Point* p);
+
+void internal_only(void);

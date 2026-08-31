@@ -1,0 +1,33 @@
+// A fixture for test type T9.
+// A managed local declared in a `for` initializer is a root.
+//
+// A registration is a statement, and no `for` header holds one, so the loop
+// moves into a block. Before that, the emitted C had four clauses in the
+// header and no C compiler read it.
+// covers: M-11
+
+@import stdio
+
+managed struct Cell {
+    gc Cell* next;
+    int value;
+}
+
+init int main(void) {
+    gc Cell* head = 0;
+    for (int index = 0; index < 200; index++) {
+        head = new Cell { .next = head, .value = index };
+    }
+
+    // `walk` is declared in the header and it must survive a collection. The
+    // body allocates, so a collector that moves objects rewrites the slot on
+    // every iteration.
+    long long total = 0;
+    for (gc Cell* walk = head; walk != 0; walk = walk->next) {
+        gc Cell* garbage = new Cell { .value = walk->value };
+        total = total + (long long) garbage->value;
+    }
+
+    stdio::printf("total %lld\n", total);
+    return 0;
+}

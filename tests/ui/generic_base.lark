@@ -1,0 +1,13 @@
+// Rule L-6 needs a type before an angle. Rule L-15 makes the table complete,
+// because this file reads no header.
+// covers: L-6, L-15
+
+struct Data<T> {
+    T* value;
+}
+
+void uses_generics(void) {
+    gc Data<int>* known;
+
+    gc Missing<int>* unknown;   //~ ERROR LK0100
+}

@@ -1,0 +1,37 @@
+// A fixture for test type T9.
+// A collector stress program. It runs under every configuration in the matrix,
+// so it runs under both root modes and under torture mode.
+// covers: M-10, M-11, M-16, M-27, O-4
+
+@import stdio
+
+managed struct Node {
+    gc Node* next;
+    int value;
+}
+
+// Builds a list of `count` nodes, and returns its length.
+int build_and_walk(int count) {
+    gc Node* head = 0;
+    for (int index = 0; index < count; index++) {
+        head = new Node { .next = head, .value = index };
+    }
+
+    int seen = 0;
+    gc Node* walk = head;
+    while (walk != 0) {
+        seen = seen + 1;
+        walk = walk->next;
+    }
+    return seen;
+}
+
+init int main(void) {
+    int total = 0;
+    // Each round drops the whole list, so the collector has real work.
+    for (int round = 0; round < 40; round++) {
+        total = total + build_and_walk(50);
+    }
+    stdio::printf("%d\n", total);
+    return 0;
+}

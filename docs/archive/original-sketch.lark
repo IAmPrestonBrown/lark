@@ -1,0 +1,113 @@
+/*
+Lark supports multi-line comments, and single-line just like C
+Lark is intended to be a superset of C
+
+The principle is anything unique to Lark (i.e. GC strategies, Runtime stuff) is all explicitly marked
+
+Transpiler should be double-pass so that you can forward reference functions, 
+variables, types, etc. from any part of the code without explicit 
+forward declarations.
+
+There are no static properties or methods (far too abstracted for Lark)
+
+Lark needs to be built to support multiple threads of execution 
+(especially pertinent to the GC)
+*/
+
+// You can use c-style includes
+#include <stdlib.h>
+
+// or the super simple lark module system (simple imports the file's contents into the namespace)
+// only exposes what is defined in that file, any imports within that file not exposed
+@import stdio
+
+// global declarations of objects/variables is normally very limited without function scope
+// Lark adds global blocks like what follows.
+// The way it works is the variables declared in this block are automatically decalred globally
+// but have zeroed initializers.
+// Then, as you will see later, you can call @init GLOBALS_ID, which will go through and initialize
+// all the values in scope.
+@global main_globals {
+    gc Person* person2 = new Person {
+        .name = "Joe",
+        .age = 37
+    };
+}
+
+// Additionally, you can pass function names from the scope for init
+// Lark will actually add the @init call implicitly to the start of the function like this
+@global(main) globals_2 {}
+
+// Lastly, if you want a function to have multiple implicit initializers and you want to manage the order
+// you can add a second argument which is the order it goes in (any ordering conflicts or ambiguities will result in implicit ordering off declaration)
+@global(main, 0) other_globals {}
+
+// Lark has interfaces, but they can only be used on managed structs
+// This is because the Lark transpiler needs to add metadata, so the managed
+// keyword helps to explicitly mark a struct for this
+managed struct Person {
+    gc char* name;
+    int age;
+}
+
+// Lark has monomorphic generics, simple transpilation
+// note that these don't necessarily need to be managed
+struct Data<T> {
+    T* data_point;
+}
+
+// only way to attach methods/function to structs is via an interface
+// requires managed struct, and managed struct needs an itable for this to work
+iface Greet {
+    // notice how the user has to explicitly define the first argument
+    // this way calling is very unintrusive on the compiler side
+    // i.e. the compiler doesn't have to add extra args in defs or refs, etc.
+    void say_hi(Self this); 
+    void name_change(gc Self* this, gc char* new_name);
+}
+
+// actual interface implementation
+impl Greet for Person {
+    // Self is a placeholder that allows inserting the implementation type
+    void say_hi(Person this) {
+        // module call, namespace is from stdio:: in this case
+        stdio::printf("%s\n", this.name);
+    }
+    
+    void name_change(gc Person* this, gc char* new_name) {
+        this->name = new_name;
+    }
+}
+
+// external declarations, make sure to mark with applicable flags
+// for the compiler
+gc_leaf void handle_opaque_data(void* data);
+gc_safe void handle_gc_managed(gc void* data);
+
+init void main() {
+    @init main_globals; // initializer for the globals block from earlier
+    
+    // creating allocated structs
+    // novel non-c syntax for creating GC allocated structs
+    // also an auto keyword for variable declarations
+    auto preston = new Person {
+        .name = "Preston Brown",
+        .age = 18
+    };
+
+    // Calling this desugars into selecting the function from the itable
+    // then adding the object to the front of the argument list
+    preston.say_hi();
+    preston.name_change("just preston");
+
+    gc Data<int>* count = new Data<int> {
+        .data_point = from_header
+    };
+
+    handle_opaque_data(count); // error, no implicit cast between gc <> raw
+    handle_opaque_data((void*)count); // correct
+    
+    void* potentially_unmanaged; // assume set from elsewhere
+    handle_gc_managed(potentially_unmanaged); // error again, no implicit cast between gc <> raw
+    handle_gc_managed((gc void*)potentially_unmanaged); // correct
+}

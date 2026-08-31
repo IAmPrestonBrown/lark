@@ -1,0 +1,67 @@
+// Several allocations inside one expression.
+//
+// Rule M-27 puts every fresh object in a temporary slot, so an allocation
+// later in the same expression cannot free one made earlier. Rule M-28 runs
+// the allocation before the initializer, so an initializer that names a
+// managed local reads the local after the collection rather than before it.
+// Under torture mode every one of these allocations collects.
+// covers: M-16, M-27, M-28, M-28a
+
+@import stdio
+
+managed struct Pair {
+    gc Pair* first;
+    gc Pair* second;
+    int value;
+}
+
+// Three allocations in one expression. The two inner ones must survive the
+// outer one, which is a safepoint.
+int nested_in_one_expression(void) {
+    gc Pair* item = new Pair {
+        .first = new Pair { .value = 1 },
+        .second = new Pair { .value = 2 },
+        .value = 3
+    };
+    return item->value * 100 + item->first->value * 10 + item->second->value;
+}
+
+// An initializer that names a local. A moving collector rewrites the local
+// during the allocation, so the field must take the address after the move.
+int initializer_reads_a_local(int rounds) {
+    gc Pair* head = 0;
+    for (int index = 0; index < rounds; index++) {
+        head = new Pair { .first = head, .value = index };
+    }
+
+    int seen = 0;
+    gc Pair* walk = head;
+    while (walk != 0) {
+        seen = seen + 1;
+        walk = walk->first;
+    }
+    return seen;
+}
+
+// Four levels deep in one expression.
+int deeply_nested(void) {
+    gc Pair* item = new Pair {
+        .first = new Pair {
+            .first = new Pair {
+                .first = new Pair { .value = 4 },
+                .value = 3
+            },
+            .value = 2
+        },
+        .value = 1
+    };
+    return item->value + item->first->value + item->first->first->value
+         + item->first->first->first->value;
+}
+
+init int main(void) {
+    stdio::printf("nested %d\n", nested_in_one_expression());
+    stdio::printf("chain %d\n", initializer_reads_a_local(300));
+    stdio::printf("deep %d\n", deeply_nested());
+    return 0;
+}

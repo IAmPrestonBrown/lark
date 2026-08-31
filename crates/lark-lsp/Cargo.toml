@@ -1,0 +1,19 @@
+[package]
+name = "lark-lsp"
+description = "The Lark language server: completion, hover, go to definition, and diagnostics."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+lark-span.workspace = true
+lark-diag.workspace = true
+lark-syntax.workspace = true
+lark-resolve.workspace = true
+lark-types.workspace = true
+lsp-server = "0.10.0"
+serde_json = "1.0.151"
+
+[lints]
+workspace = true

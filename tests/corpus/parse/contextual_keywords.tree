@@ -1,0 +1,151 @@
+SOURCE_FILE@0..349
+  LINE_COMMENT@0..73 "// Rule L-3 makes every Lark keyword contextual, and rule L-4 keeps it an"
+  WHITESPACE@73..74 "\n"
+  LINE_COMMENT@74..150 "// ordinary identifier everywhere else. This file is valid C, and every Lark"
+  WHITESPACE@150..151 "\n"
+  LINE_COMMENT@151..183 "// word appears as a plain name."
+  WHITESPACE@183..184 "\n"
+  LINE_COMMENT@184..203 "// covers: L-3, L-4"
+  WHITESPACE@203..205 "\n\n"
+  DECLARATION@205..213
+    DECL_SPECIFIERS@205..208
+      INT_KW@205..208 "int"
+    WHITESPACE@208..209 " "
+    INIT_DECLARATOR@209..212
+      DECLARATOR@209..212
+        NAME@209..212
+          IDENT@209..212 "new"
+    SEMICOLON@212..213 ";"
+  WHITESPACE@213..214 "\n"
+  DECLARATION@214..221
+    DECL_SPECIFIERS@214..217
+      INT_KW@214..217 "int"
+    WHITESPACE@217..218 " "
+    INIT_DECLARATOR@218..220
+      DECLARATOR@218..220
+        NAME@218..220
+          IDENT@218..220 "gc"
+    SEMICOLON@220..221 ";"
+  WHITESPACE@221..222 "\n"
+  DECLARATION@222..231
+    DECL_SPECIFIERS@222..225
+      INT_KW@222..225 "int"
+    WHITESPACE@225..226 " "
+    INIT_DECLARATOR@226..230
+      DECLARATOR@226..230
+        NAME@226..230
+          IDENT@226..230 "init"
+    SEMICOLON@230..231 ";"
+  WHITESPACE@231..232 "\n"
+  DECLARATION@232..241
+    DECL_SPECIFIERS@232..235
+      INT_KW@232..235 "int"
+    WHITESPACE@235..236 " "
+    INIT_DECLARATOR@236..240
+      DECLARATOR@236..240
+        NAME@236..240
+          IDENT@236..240 "impl"
+    SEMICOLON@240..241 ";"
+  WHITESPACE@241..242 "\n"
+  DECLARATION@242..252
+    DECL_SPECIFIERS@242..245
+      INT_KW@242..245 "int"
+    WHITESPACE@245..246 " "
+    INIT_DECLARATOR@246..251
+      DECLARATOR@246..251
+        NAME@246..251
+          IDENT@246..251 "iface"
+    SEMICOLON@251..252 ";"
+  WHITESPACE@252..253 "\n"
+  DECLARATION@253..265
+    DECL_SPECIFIERS@253..256
+      INT_KW@253..256 "int"
+    WHITESPACE@256..257 " "
+    INIT_DECLARATOR@257..264
+      DECLARATOR@257..264
+        NAME@257..264
+          IDENT@257..264 "managed"
+    SEMICOLON@264..265 ";"
+  WHITESPACE@265..267 "\n\n"
+  FN_DEF@267..348
+    DECL_SPECIFIERS@267..271
+      VOID_KW@267..271 "void"
+    WHITESPACE@271..272 " "
+    DECLARATOR@272..279
+      NAME@272..273
+        IDENT@272..273 "f"
+      PARAM_LIST@273..279
+        L_PAREN@273..274 "("
+        PARAM@274..278
+          DECL_SPECIFIERS@274..278
+            VOID_KW@274..278 "void"
+          DECLARATOR@278..278
+        R_PAREN@278..279 ")"
+    WHITESPACE@279..280 " "
+    BLOCK_STMT@280..348
+      L_CURLY@280..281 "{"
+      WHITESPACE@281..286 "\n    "
+      EXPR_STMT@286..294
+        ASSIGN_EXPR@286..293
+          NAME_EXPR@286..289
+            NAME_REF@286..289
+              IDENT@286..289 "new"
+          WHITESPACE@289..290 " "
+          EQ@290..291 "="
+          WHITESPACE@291..292 " "
+          LITERAL_EXPR@292..293
+            INT_NUMBER@292..293 "5"
+        SEMICOLON@293..294 ";"
+      WHITESPACE@294..299 "\n    "
+      DECL_STMT@299..311
+        DECLARATION@299..311
+          DECL_SPECIFIERS@299..301
+            NAME_REF@299..301
+              IDENT@299..301 "gc"
+          WHITESPACE@301..302 " "
+          INIT_DECLARATOR@302..310
+            DECLARATOR@302..302
+            EQ@302..303 "="
+            WHITESPACE@303..304 " "
+            BIN_EXPR@304..310
+              NAME_EXPR@304..306
+                NAME_REF@304..306
+                  IDENT@304..306 "gc"
+              WHITESPACE@306..307 " "
+              PLUS@307..308 "+"
+              WHITESPACE@308..309 " "
+              LITERAL_EXPR@309..310
+                INT_NUMBER@309..310 "1"
+          SEMICOLON@310..311 ";"
+      WHITESPACE@311..316 "\n    "
+      DECL_STMT@316..346
+        DECLARATION@316..346
+          DECL_SPECIFIERS@316..320
+            NAME_REF@316..320
+              IDENT@316..320 "init"
+          WHITESPACE@320..321 " "
+          INIT_DECLARATOR@321..345
+            DECLARATOR@321..321
+            EQ@321..322 "="
+            WHITESPACE@322..323 " "
+            BIN_EXPR@323..345
+              BIN_EXPR@323..335
+                NAME_EXPR@323..327
+                  NAME_REF@323..327
+                    IDENT@323..327 "impl"
+                WHITESPACE@327..328 " "
+                PLUS@328..329 "+"
+                WHITESPACE@329..330 " "
+                NAME_EXPR@330..335
+                  NAME_REF@330..335
+                    IDENT@330..335 "iface"
+              WHITESPACE@335..336 " "
+              PLUS@336..337 "+"
+              WHITESPACE@337..338 " "
+              NAME_EXPR@338..345
+                NAME_REF@338..345
+                  IDENT@338..345 "managed"
+          SEMICOLON@345..346 ";"
+      WHITESPACE@346..347 "\n"
+      R_CURLY@347..348 "}"
+  WHITESPACE@348..349 "\n"

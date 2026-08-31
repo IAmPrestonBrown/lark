@@ -1,0 +1,8 @@
+// Rule N-11 does not re-export an import, so an imported name keeps its prefix.
+// covers: N-2, N-11
+
+@import shapes
+
+void uses_the_name(void) {
+    gc Point* p;   //~ ERROR LK0612
+}

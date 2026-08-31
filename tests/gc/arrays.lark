@@ -1,0 +1,71 @@
+// Managed arrays and the objects their elements hold.
+//
+// Every element of an array carries the field map, so a collector must trace
+// each one and not the first alone. Rule M-5.
+// The second case takes the address of an array element, which is an interior
+// pointer. Rule M-8 does not hold for a moving collector, so it does not run
+// this fixture.
+// needs: interior-pointers
+// covers: M-5, M-8, M-9, M-16
+
+@import stdio
+
+managed struct Cell {
+    gc Cell* target;
+    int value;
+}
+
+// Fills an array whose elements each point at their own object.
+int array_of_pointers(int count) {
+    gc Cell* items = new Cell[count];
+    for (int index = 0; index < count; index++) {
+        items[index].target = new Cell { .value = index * 2 };
+        items[index].value = index;
+    }
+
+    // Allocate garbage, so a collection has work.
+    for (int index = 0; index < 300; index++) {
+        gc Cell* waste = new Cell { .value = index };
+        waste->value = index;
+    }
+
+    int total = 0;
+    for (int index = 0; index < count; index++) {
+        if (items[index].target->value != index * 2) {
+            return -1;
+        }
+        total = total + items[index].value;
+    }
+    return total;
+}
+
+// An array whose elements point back into the same array, so the graph is
+// dense and every element is both a holder and a target.
+int array_points_at_itself(int count) {
+    gc Cell* items = new Cell[count];
+    for (int index = 0; index < count; index++) {
+        items[index].value = index;
+    }
+    for (int index = 1; index < count; index++) {
+        items[index].target = &items[index - 1];
+    }
+
+    for (int index = 0; index < 300; index++) {
+        gc Cell* waste = new Cell { .value = index };
+        waste->value = index;
+    }
+
+    int seen = 0;
+    gc Cell* walk = &items[count - 1];
+    while (walk != 0) {
+        seen = seen + 1;
+        walk = walk->target;
+    }
+    return seen;
+}
+
+init int main(void) {
+    stdio::printf("pointers %d\n", array_of_pointers(60));
+    stdio::printf("interior %d\n", array_points_at_itself(40));
+    return 0;
+}

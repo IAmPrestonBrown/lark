@@ -1,0 +1,127 @@
+// Object graph shapes, built and walked by a Lark program.
+//
+// Each shape reaches the collector through the shadow stack or a conservative
+// scan, and each one must come through a collection whole. The program prints
+// one line per shape, so a lost link changes the output rather than crashing.
+// covers: M-5, M-9, M-16, M-27
+
+@import stdio
+
+managed struct Node {
+    gc Node* left;
+    gc Node* right;
+    int value;
+}
+
+// Builds a chain of `count` nodes and returns its length after a walk.
+int chain_length(int count) {
+    gc Node* head = new Node { .value = 0 };
+    gc Node* tail = head;
+    for (int index = 1; index < count; index++) {
+        gc Node* next = new Node { .value = index };
+        tail->left = next;
+        tail = next;
+    }
+
+    int seen = 0;
+    gc Node* walk = head;
+    while (walk != 0) {
+        seen = seen + 1;
+        walk = walk->left;
+    }
+    return seen;
+}
+
+// Two paths reach one object. Both must still name the same object.
+int diamond_agrees(void) {
+    gc Node* bottom = new Node { .value = 4 };
+    gc Node* left = new Node { .left = bottom };
+    gc Node* right = new Node { .left = bottom };
+    gc Node* top = new Node { .left = left, .right = right };
+
+    // Allocate garbage, so a collection has work to do.
+    for (int index = 0; index < 200; index++) {
+        gc Node* waste = new Node { .value = index };
+        waste->value = index;
+    }
+
+    if (top->left->left == top->right->left) {
+        return top->left->left->value;
+    }
+    return 0;
+}
+
+// A ring. Nothing in it is a leaf, so a walk must stop on its own.
+int ring_length(int count) {
+    gc Node* first = new Node { .value = 0 };
+    gc Node* previous = first;
+    for (int index = 1; index < count; index++) {
+        gc Node* next = new Node { .value = index };
+        previous->left = next;
+        previous = next;
+    }
+    previous->left = first;
+
+    for (int index = 0; index < 200; index++) {
+        gc Node* waste = new Node { .value = index };
+        waste->value = index;
+    }
+
+    int seen = 0;
+    gc Node* walk = first->left;
+    while (walk != first) {
+        seen = seen + 1;
+        walk = walk->left;
+    }
+    return seen + 1;
+}
+
+// A node that points at itself.
+int self_reference(void) {
+    gc Node* item = new Node { .value = 9 };
+    item->left = item;
+    item->right = item;
+    for (int index = 0; index < 100; index++) {
+        gc Node* waste = new Node { .value = index };
+        waste->value = index;
+    }
+    if (item->left->right->left == item) {
+        return item->value;
+    }
+    return 0;
+}
+
+// A tree, built without recursion so the program itself uses little stack.
+int tree_leftmost_depth(int depth) {
+    gc Node* root = new Node { .value = 1 };
+    gc Node* walk = root;
+    for (int level = 2; level <= depth; level++) {
+        gc Node* left = new Node { .value = level };
+        gc Node* right = new Node { .value = level };
+        walk->left = left;
+        walk->right = right;
+        walk = left;
+    }
+
+    for (int index = 0; index < 200; index++) {
+        gc Node* waste = new Node { .value = index };
+        waste->value = index;
+    }
+
+    int seen = 1;
+    gc Node* down = root;
+    while (down->left != 0) {
+        down = down->left;
+        seen = seen + 1;
+    }
+    return seen;
+}
+
+init int main(void) {
+    stdio::printf("chain %d\n", chain_length(400));
+    stdio::printf("diamond %d\n", diamond_agrees());
+    stdio::printf("ring %d\n", ring_length(150));
+    stdio::printf("self %d\n", self_reference());
+    stdio::printf("tree %d\n", tree_leftmost_depth(30));
+    return 0;
+}

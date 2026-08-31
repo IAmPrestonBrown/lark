@@ -1,0 +1,109 @@
+{
+  "name": "lark-lang",
+  "displayName": "Lark",
+  "description": "Language support for Lark, a systems language that translates to C11.",
+  "version": "0.1.0",
+  "license": "MIT OR Apache-2.0",
+  "publisher": "lark-lang",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "lark",
+    "c",
+    "systems",
+    "transpiler"
+  ],
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "workspaceContains:**/lark.toml"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "lark",
+        "aliases": [
+          "Lark",
+          "lark"
+        ],
+        "extensions": [
+          ".lark"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "lark",
+        "scopeName": "source.lark",
+        "path": "./syntaxes/lark.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "Lark",
+      "properties": {
+        "lark.server.path": {
+          "type": "string",
+          "default": "lark-lsp",
+          "description": "The language server to run. A bare name is looked up on the PATH, and a path is used as it is."
+        },
+        "lark.server.searchPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Directories that `@import` searches, beyond the directory of the file. See rule N-3. A relative path is read from the workspace folder."
+        },
+        "lark.server.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run the language server. Turn this off to keep syntax highlighting alone."
+        },
+        "lark.format.onSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run `lark fmt` when a file is saved. The formatter has one style and nothing to configure. See rule Z-1."
+        },
+        "lark.format.path": {
+          "type": "string",
+          "default": "lark",
+          "description": "The compiler to run for `lark fmt`. A bare name is looked up on the PATH."
+        },
+        "lark.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Log the traffic between the editor and the server."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "lark.restartServer",
+        "title": "Lark: Restart the language server"
+      },
+      {
+        "command": "lark.format",
+        "title": "Lark: Format this file"
+      }
+    ]
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/preston/lark-lang"
+  }
+}

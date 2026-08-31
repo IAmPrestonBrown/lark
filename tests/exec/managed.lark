@@ -1,0 +1,22 @@
+// A managed program that runs in all four configurations.
+// covers: O-4, O-6, M-10, M-12, T-8
+
+@import stdio
+
+managed struct Person {
+    gc char* name;
+    int age;
+}
+
+init int main(void) {
+    gc Person* first = new Person { .name = "Ada", .age = 36 };
+    gc Person* second = new Person { .name = "Grace", .age = 45 };
+
+    gc char* buffer = new char[64];
+    buffer[0] = 'x';
+
+    stdio::printf("%s %d\n", first->name, first->age);
+    stdio::printf("%s %d\n", second->name, second->age);
+    stdio::printf("%c\n", buffer[0]);
+    return 0;
+}

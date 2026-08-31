@@ -1,0 +1,10 @@
+// A fixture for test type T7.
+// Lark accepts this file, because phase A does not read headers and cannot
+// know that `missing_function` has no declaration. The C compiler rejects it.
+// Rule X-3 requires the C compiler to name this file and this line.
+// covers: X-3
+// expect-c-error-at: 9
+
+int main(void) {
+    return missing_function();
+}

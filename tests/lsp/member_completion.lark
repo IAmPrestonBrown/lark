@@ -1,0 +1,25 @@
+// The server offers the fields and the methods of the receiver.
+// Rule O-17 resolves a method across every interface that the type implements.
+// covers: O-17
+// lsp: completion
+
+managed struct Person {
+    gc char* name;
+    int age;
+}
+
+iface Greet {
+    void say_hi(Self this);
+    void rename(gc Self* this, gc char* fresh);
+}
+
+impl Greet for Person {
+    void say_hi(Person this) { }
+    void rename(gc Person* this, gc char* fresh) { }
+}
+
+init int main(void) {
+    auto p = new Person { .name = "Ada", .age = 36 };
+    p.<|>
+    return 0;
+}

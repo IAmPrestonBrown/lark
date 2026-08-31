@@ -1,0 +1,40 @@
+// Overhead: what managed memory costs against plain C.
+//
+// `overhead.c` runs the same algorithm with `malloc` and `free`. Build both
+// and compare. The difference is the shadow stack, the polls, and the
+// collector. See `overhead.c` for the rules that each line pays for.
+
+@import stdio
+@import bench
+
+managed struct Node {
+    gc Node* next;
+    int value;
+}
+
+// Builds a list, sums it, and drops it. The list dies each round, so a
+// managed run collects and a plain C run frees.
+long long round_trip(int length) {
+    gc Node* head = 0;
+    for (int index = 0; index < length; index++) {
+        head = new Node { .next = head, .value = index };
+    }
+    long long total = 0;
+    for (gc Node* walk = head; walk != 0; walk = walk->next) {
+        total = total + (long long) walk->value;
+    }
+    return total;
+}
+
+init int main(int argc, char** argv) {
+    int rounds = bench::bench_scale(argc, argv, 400, 20);
+    double start = bench::bench_now();
+
+    long long total = 0;
+    for (int round = 0; round < rounds; round++) {
+        total = total + round_trip(20000);
+    }
+
+    bench::bench_report("overhead", bench::bench_now() - start, total);
+    return 0;
+}

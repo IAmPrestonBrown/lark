@@ -1,0 +1,5 @@
+# This document states the banned word list, so it names every word.
+docs/conventions.md
+# The original philosophy note from the author. It is source material,
+# not project documentation.
+lang.md

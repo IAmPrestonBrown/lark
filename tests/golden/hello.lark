@@ -1,0 +1,22 @@
+// A fixture for test type T5.
+// The harness compares the emitted C against hello.expected.c.
+// The comparison shows the cost of every construct.
+// covers: X-2, X-4, X-4a, X-5, X-5b
+
+@import stdio
+
+export struct Point {
+    int x;
+    int y;
+}
+
+static int calls = 0;
+
+int area(struct Point p) {
+    calls = calls + 1;
+    return p.x * p.y;
+}
+
+export int report(struct Point p) {
+    return area(p);
+}

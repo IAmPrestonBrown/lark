@@ -1,0 +1,81 @@
+// A pointer from an old object to a young one.
+//
+// This is the shape that rule R-2 exists for. A generational collector walks
+// the nursery and not the old generation, so a field of an old object that
+// names a young one is a root that nothing else finds. Without the barrier the
+// young object goes, and the old object then holds an address that no longer
+// names it.
+//
+// A collector with no barrier passes this too, because rule R-2 makes the call
+// a plain store there and the transpiler emits no call at all.
+// covers: R-2, M-9, M-16
+
+@import stdio
+
+managed struct Node {
+    gc Node* next;
+    int value;
+}
+
+// Builds a list, then attaches a fresh node to the head of it.
+//
+// The head is old by the time the fresh node exists, because the loop filled
+// a nursery in between. The store into `head->next` is the one that needs the
+// barrier.
+int attach_after_churn(int rounds) {
+    gc Node* head = new Node { .value = 1 };
+
+    // Enough allocation to fill a nursery, so the head is promoted.
+    for (int index = 0; index < rounds; index++) {
+        gc Node* waste = new Node { .value = index };
+        waste->value = index;
+    }
+
+    gc Node* fresh = new Node { .value = 22 };
+    head->next = fresh;
+
+    // More churn, so a collection runs with the pointer in place.
+    for (int index = 0; index < rounds; index++) {
+        gc Node* waste = new Node { .value = index };
+        waste->value = index;
+    }
+
+    if (head->next == 0) {
+        return -1;
+    }
+    return head->value + head->next->value;
+}
+
+// The same shape, but through an array element.
+int attach_into_an_array(int rounds) {
+    gc Node* items = new Node[8];
+    for (int index = 0; index < rounds; index++) {
+        gc Node* waste = new Node { .value = index };
+        waste->value = index;
+    }
+
+    for (int index = 0; index < 8; index++) {
+        gc Node* target = new Node { .value = index * 3 };
+        items[index].next = target;
+    }
+
+    for (int index = 0; index < rounds; index++) {
+        gc Node* waste = new Node { .value = index };
+        waste->value = index;
+    }
+
+    int total = 0;
+    for (int index = 0; index < 8; index++) {
+        if (items[index].next == 0) {
+            return -1;
+        }
+        total = total + items[index].next->value;
+    }
+    return total;
+}
+
+init int main(void) {
+    stdio::printf("attached %d\n", attach_after_churn(4000));
+    stdio::printf("array %d\n", attach_into_an_array(4000));
+    return 0;
+}

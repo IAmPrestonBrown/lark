@@ -1,0 +1,175 @@
+(* Lark grammar, expressed as a delta over ISO C11 Annex A.            *)
+(* Every C11 production stays valid. This file lists additions and     *)
+(* the productions that Lark extends.                                  *)
+(*                                                                     *)
+(* Convention: a C11 production is written in lower-case with a `c-`   *)
+(* prefix when Lark references it without change.                      *)
+
+(* ------------------------------------------------------------------ *)
+(* Translation unit                                                    *)
+(* ------------------------------------------------------------------ *)
+
+translation-unit
+    = { external-declaration } ;
+
+external-declaration
+    = c-external-declaration          (* unchanged C11 *)
+    | import-directive
+    | global-block
+    | iface-declaration
+    | impl-declaration
+    | export-declaration
+    ;
+
+export-declaration
+    = "export" ( c-declaration
+               | c-function-definition
+               | iface-declaration
+               | global-block ) ;
+
+(* ------------------------------------------------------------------ *)
+(* Modules                                                             *)
+(* ------------------------------------------------------------------ *)
+
+import-directive
+    = "@import" identifier ;
+
+qualified-name
+    = identifier "::" identifier ;
+
+(* ------------------------------------------------------------------ *)
+(* Global blocks                                                       *)
+(* ------------------------------------------------------------------ *)
+
+global-block
+    = "@global" [ global-attach ] identifier "{" { c-declaration } "}" ;
+
+global-attach
+    = "(" identifier [ "," integer-constant ] ")" ;
+
+init-statement
+    = "@init" identifier ";" ;
+
+(* ------------------------------------------------------------------ *)
+(* Interfaces                                                          *)
+(* ------------------------------------------------------------------ *)
+
+iface-declaration
+    = "iface" identifier "{" { iface-method } "}" ;
+
+iface-method
+    = type-name identifier "(" receiver [ "," parameter-list ] ")" ";" ;
+
+receiver
+    = "Self" identifier
+    | "gc" "Self" "*" identifier
+    ;
+
+impl-declaration
+    = "impl" identifier FOR-KEYWORD identifier "{" { c-function-definition } "}" ;
+
+(* `for` is a C11 keyword, so it arrives as the keyword token, not as an     *)
+(* identifier. `impl X for Y` is not a valid C declaration, so no ambiguity  *)
+(* arises.                                                                   *)
+
+(* ------------------------------------------------------------------ *)
+(* Declaration specifiers: Lark additions                              *)
+(* ------------------------------------------------------------------ *)
+
+(* `gc` joins the C11 type-qualifier list. *)
+type-qualifier
+    = "const" | "restrict" | "volatile" | "_Atomic"
+    | "gc" ;
+
+(* `managed` precedes a struct specifier. *)
+struct-or-union-specifier
+    = [ "managed" ] c-struct-or-union-specifier ;
+
+(* `init`, `gc_leaf`, and `gc_safe` are function specifiers. *)
+function-specifier
+    = "inline" | "_Noreturn"
+    | "init" | "gc_leaf" | "gc_safe" ;
+
+(* `auto` with no type specifier requests inference. *)
+declaration
+    = "auto" init-declarator-list ";"          (* inference, rule L-5   *)
+    | c-declaration ;                          (* includes storage-class auto *)
+
+(* ------------------------------------------------------------------ *)
+(* Generics                                                            *)
+(* ------------------------------------------------------------------ *)
+
+(* A declaration attaches parameters to the tag or to the function name. *)
+generic-parameters
+    = "<" identifier { "," identifier } ">" ;
+
+(* An instantiation supplies types. Rule L-6 governs the parse decision. *)
+generic-arguments
+    = "<" type-name { "," type-name } ">" ;
+
+(* A type name can be a generic instantiation. *)
+typedef-name
+    = identifier [ generic-arguments ] ;
+
+(* ------------------------------------------------------------------ *)
+(* Expressions: Lark additions                                         *)
+(* ------------------------------------------------------------------ *)
+
+postfix-expression
+    = c-postfix-expression
+    | new-expression
+    | postfix-expression "." identifier [ "::" identifier ] argument-list
+    ;
+
+new-expression
+    = "new" type-name "{" [ designated-initializer-list ] "}"
+    | "new" type-name "[" assignment-expression "]"
+    ;
+
+primary-expression
+    = c-primary-expression
+    | qualified-name
+    | identifier generic-arguments      (* generic function reference *)
+    ;
+
+(* ------------------------------------------------------------------ *)
+(* Statements                                                          *)
+(* ------------------------------------------------------------------ *)
+
+statement
+    = c-statement
+    | init-statement
+    ;
+
+(* ------------------------------------------------------------------ *)
+(* Parse decisions                                                     *)
+(* ------------------------------------------------------------------ *)
+(*                                                                      *)
+(* D1. identifier "<"                                                   *)
+(*     Resolve the identifier in the innermost enclosing scope.          *)
+(*       type  -> generic-arguments                                      *)
+(*       value -> relational-expression                                  *)
+(*       unbound -> generic-arguments, report LK0100 if it fails later.  *)
+(*                                                                      *)
+(* D2. "auto"                                                           *)
+(*     Followed by a type specifier -> C storage class, ignored.         *)
+(*     Followed by a declarator     -> inference.                        *)
+(*                                                                      *)
+(* D3. "new"                                                            *)
+(*     Recognized only in expression position with a type name after it. *)
+(*     At statement position, a C declaration whose type is a typedef    *)
+(*     named `new` still parses as C.                                    *)
+(*                                                                      *)
+(* D4. "gc", "managed", "export", "init", "gc_leaf", "gc_safe"          *)
+(*     Recognized only where a second type specifier would violate       *)
+(*     C11 6.7.2p2. Elsewhere each is an ordinary identifier.            *)
+(*                                                                      *)
+(* D5. ">>" closing two generic argument lists                           *)
+(*     The lexer produces one shift token, because C needs it. The       *)
+(*     parser splits it into two ">" tokens. See rule L-14.              *)
+(*                                                                      *)
+(* D6. A definition that ends with "}" and declares no variable needs no  *)
+(*     semicolon. See rule O-25. A name after the "}" is a declarator     *)
+(*     only when a declaration can continue after it, so                  *)
+(*     "struct S { } x;" declares x and "struct S { }" followed by        *)
+(*     "export ..." starts a new item.                                    *)

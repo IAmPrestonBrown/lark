@@ -1,0 +1,22 @@
+// A `new` that names a record of another module.
+// covers: N-4, N-6, M-5a, X-5
+
+@import stdio
+@import geometry
+
+init int main(void) {
+    // Rule M-5a. The descriptor lives in the other module, and the size must
+    // come from it. A shared one byte descriptor loses every field but the
+    // first byte.
+    gc geometry::Circle* explicit_type = new geometry::Circle {
+        .radius = 4, .weight = 5, .label = 6
+    };
+
+    // Rule T-10 with rule X-5. The inferred type keeps only the name.
+    auto inferred = new geometry::Circle { .radius = 2, .weight = 7, .label = 8 };
+
+    stdio::printf("area %d\n", geometry::area(explicit_type));
+    stdio::printf("fields %d %d %d\n", explicit_type->weight,
+                  explicit_type->label, inferred->weight);
+    return 0;
+}

@@ -1,0 +1,50 @@
+SOURCE_FILE@0..237
+  LINE_COMMENT@0..38 "// A trivial fixture for test type T2."
+  WHITESPACE@38..39 "\n"
+  LINE_COMMENT@39..115 "// It proves that the harness discovers a file, runs the front end, compares"
+  WHITESPACE@115..116 "\n"
+  LINE_COMMENT@116..165 "// the tree to a snapshot, and holds invariant R."
+  WHITESPACE@165..167 "\n\n"
+  IMPORT_DIRECTIVE@167..180
+    AT@167..168 "@"
+    IDENT@168..174 "import"
+    WHITESPACE@174..175 " "
+    NAME@175..180
+      IDENT@175..180 "stdio"
+  WHITESPACE@180..182 "\n\n"
+  FN_DEF@182..236
+    DECL_SPECIFIERS@182..191
+      IDENT@182..186 "init"
+      WHITESPACE@186..187 " "
+      VOID_KW@187..191 "void"
+    WHITESPACE@191..192 " "
+    DECLARATOR@192..202
+      NAME@192..196
+        IDENT@192..196 "main"
+      PARAM_LIST@196..202
+        L_PAREN@196..197 "("
+        PARAM@197..201
+          DECL_SPECIFIERS@197..201
+            VOID_KW@197..201 "void"
+          DECLARATOR@201..201
+        R_PAREN@201..202 ")"
+    WHITESPACE@202..203 " "
+    BLOCK_STMT@203..236
+      L_CURLY@203..204 "{"
+      WHITESPACE@204..209 "\n    "
+      EXPR_STMT@209..234
+        CALL_EXPR@209..233
+          NAME_EXPR@209..222
+            PATH@209..222
+              IDENT@209..214 "stdio"
+              COLON2@214..216 "::"
+              IDENT@216..222 "printf"
+          ARG_LIST@222..233
+            L_PAREN@222..223 "("
+            LITERAL_EXPR@223..232
+              STRING_LITERAL@223..232 "\"hello\\n\""
+            R_PAREN@232..233 ")"
+        SEMICOLON@233..234 ";"
+      WHITESPACE@234..235 "\n"
+      R_CURLY@235..236 "}"
+  WHITESPACE@236..237 "\n"

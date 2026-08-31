@@ -1,0 +1,41 @@
+// Every Lark item in one file. The snapshot shows the shape of each node.
+// covers: L-1, L-2
+
+@import stdio
+
+export managed struct Person {
+    gc char* name;
+    int age;
+}
+
+export iface Greet {
+    void say_hi(Self this);
+    void name_change(gc Self* this, gc char* new_name);
+}
+
+impl Greet for Person {
+    void say_hi(Person this) {
+        stdio::printf("%s\n", this.name);
+    }
+
+    void name_change(gc Person* this, gc char* new_name) {
+        this->name = new_name;
+    }
+}
+
+@global main_globals {
+    gc Person* person2 = new Person { .name = "Joe", .age = 37 };
+}
+
+@global(main, 0) other_globals {}
+
+gc_leaf void handle_opaque_data(void* data);
+
+init void main(void) {
+    @init main_globals;
+    auto preston = new Person { .name = "Preston", .age = 18 };
+    preston.say_hi();
+    preston.name_change("just preston");
+    gc char* buf = new char[256];
+    handle_opaque_data((void*)buf);
+}

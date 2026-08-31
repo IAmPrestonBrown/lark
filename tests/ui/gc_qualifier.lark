@@ -1,0 +1,16 @@
+// Rule T-2 allows `gc` only on a pointer. Rule T-1a places the marker on the
+// outermost pointer level. Rule M-1 keeps a managed pointer off file scope.
+// covers: T-2, T-1a, M-1
+
+void f(void) {
+    gc int not_a_pointer;       //~ ERROR LK0200
+
+    gc int* one_level;
+
+    gc gc int** two_levels;
+
+    gc gc int* too_many;        //~ ERROR LK0200
+
+    gc char local_bad;          //~ ERROR LK0200
+    gc char* local_good;
+}

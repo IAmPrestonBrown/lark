@@ -1,0 +1,29 @@
+// The initialization rules from chapter 07.
+// covers: I-1, I-11, I-17
+
+@global early {
+    int uses_late = late_value;   //~ ERROR LK0711
+}
+
+@global late {
+    int late_value = 5;
+}
+
+@global(main, 0) early_attached {
+    int reads = later_value;      //~ ERROR LK0711
+}
+
+@global(main, 1) later_attached {
+    int later_value = 7;
+}
+
+init int main(void) {
+    @init early;
+    @init late;
+    @init missing;                //~ ERROR LK0710
+    return 0;
+}
+
+init int second_entry(void) {     //~ ERROR LK0701
+    return 0;
+}
