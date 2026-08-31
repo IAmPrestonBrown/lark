@@ -35,6 +35,11 @@ init int main(void) {
 
 ## Start here
 
+Download an archive from the releases page, unpack it, and put `bin` on your
+`PATH`. The archive carries the runtime, so nothing else is needed.
+
+Or build from source.
+
 ```sh
 cargo install --path crates/lark-cli     # the `lark` command
 cargo install --path crates/lark-lsp     # the editor server

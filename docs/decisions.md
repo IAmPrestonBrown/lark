@@ -1492,4 +1492,20 @@ could not match on the error, store it, or name it. The documentation check
 found it as a link to a private item.
 **Method:** Both are exported. `cargo doc` with `-D warnings` runs in the gate,
 so the next one fails the build rather than reaching a reader.
+## D162 - An installed binary finds the runtime beside itself
+**Status:** settled.
+**Reason:** The runtime search read `build.runtime`, `LARK_RUNTIME`, and two
+paths relative to the project. A user who unpacked a release archive had none
+of those, so every managed program failed until they set a variable by hand.
+**Method:** The search also looks beside the running program: `../runtime`,
+`../share/lark/runtime`, and `runtime`. A release archive holds `bin/lark` and
+`runtime/`, so it works after one unpack.
 
+## D163 - A release archive proves itself before it ships
+**Status:** settled.
+**Reason:** A missing runtime file breaks every managed program, and no unit
+test finds it, because the tests run inside the source tree where the runtime
+is always present.
+**Method:** Rule C-7.2. The release workflow unpacks each archive outside the
+source tree and builds a managed program with it. The four targets each build
+on their own machine, so no build cross compiles.

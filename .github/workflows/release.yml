@@ -1,0 +1,172 @@
+name: release
+
+# A tag that names a version builds the command line tools and publishes them.
+# Push the tag after the gate passes on the branch.
+#
+#     git tag v1.0.0
+#     git push origin v1.0.0
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+  # A manual run builds and uploads nothing, so a change here is testable.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # The tag and `Cargo.toml` must agree, or the archive names a version that
+  # the binary does not report.
+  version:
+    name: check the version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compare the tag with the manifest
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -eu
+          tag="${GITHUB_REF_NAME#v}"
+          manifest=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          echo "tag $tag, manifest $manifest"
+          if [ "$tag" != "$manifest" ]; then
+            echo "the tag and Cargo.toml disagree" >&2
+            exit 1
+          fi
+
+  build:
+    name: build for ${{ matrix.target }}
+    needs: version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: macos-13
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install the toolchain
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build the tools
+        run: cargo build --release --target ${{ matrix.target }} -p lark-cli -p lark-lsp
+
+      - name: Assemble the archive
+        id: package
+        shell: bash
+        run: |
+          set -eu
+          version="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+            version="dev"
+          fi
+          name="lark-${version}-${{ matrix.target }}"
+          out="dist/${name}"
+          mkdir -p "${out}/bin"
+
+          cp "target/${{ matrix.target }}/release/lark" "${out}/bin/"
+          cp "target/${{ matrix.target }}/release/lark-lsp" "${out}/bin/"
+
+          # The runtime ships as C source. A managed program compiles it, so
+          # the archive carries the sources rather than a library built for
+          # one set of flags. `lark` finds `runtime/` beside `bin/`.
+          cp -R runtime "${out}/runtime"
+          rm -rf "${out}/runtime/build"
+
+          cp -R examples "${out}/examples"
+          cp LICENSE README.md "${out}/"
+
+          tar -C dist -czf "${name}.tar.gz" "${name}"
+          shasum -a 256 "${name}.tar.gz" > "${name}.tar.gz.sha256"
+          echo "name=${name}" >> "$GITHUB_OUTPUT"
+
+      - name: Prove the archive works on its own
+        shell: bash
+        run: |
+          set -eu
+          # Unpack somewhere with no source tree, and build a managed program.
+          # This catches a missing runtime file, which no unit test finds.
+          work=$(mktemp -d)
+          tar -C "$work" -xzf "${{ steps.package.outputs.name }}.tar.gz"
+          root="$work/${{ steps.package.outputs.name }}"
+
+          project=$(mktemp -d)
+          cat > "$project/lark.toml" <<'EOF'
+          [package]
+          name = "smoke"
+          version = "0.1.0"
+          EOF
+          cat > "$project/smoke.lark" <<'EOF'
+          #include <stdio.h>
+
+          managed struct Node { gc Node* next; int value; }
+
+          init int main(void) {
+              gc Node* head = 0;
+              for (int i = 1; i <= 4; i++) {
+                  head = new Node { .next = head, .value = i };
+              }
+              int total = 0;
+              for (gc Node* w = head; w != 0; w = w->next) {
+                  total = total + w->value;
+              }
+              printf("total %d\n", total);
+              return 0;
+          }
+          EOF
+          (cd "$project" && "$root/bin/lark" build smoke.lark)
+          result=$("$project/build/smoke")
+          echo "$result"
+          test "$result" = "total 10"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.name }}
+          path: |
+            ${{ steps.package.outputs.name }}.tar.gz
+            ${{ steps.package.outputs.name }}.tar.gz.sha256
+          retention-days: 7
+
+  publish:
+    name: publish the release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Collect the checksums
+        run: |
+          set -eu
+          cd dist
+          cat ./*.sha256 > SHA256SUMS
+          rm -f ./*.sha256
+          ls -l
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag \
+            dist/*

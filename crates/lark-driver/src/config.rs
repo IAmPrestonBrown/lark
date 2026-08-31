@@ -289,6 +289,7 @@ impl Config {
         }
         candidates.push(root.join("runtime"));
         candidates.push(root.join("../runtime"));
+        candidates.extend(installed_runtimes());
         candidates
             .into_iter()
             .find(|path| path.join("include/lark_rt.h").is_file())
@@ -354,6 +355,30 @@ fn apply_override(document: &mut toml::Table, entry: &str) -> Result<(), ConfigE
         .unwrap_or_else(|_| toml::Value::String(text.to_owned()));
     table.insert(field, value);
     Ok(())
+}
+
+/// Returns the runtime directories that sit beside an installed binary.
+///
+/// A release archive holds `bin/lark` and `runtime/`, so a program that lives
+/// outside the source tree still finds the runtime. Without this, a user who
+/// installs the archive has to set `LARK_RUNTIME` by hand.
+///
+/// The list is empty when the path of the running program is not available.
+fn installed_runtimes() -> Vec<PathBuf> {
+    let Ok(exe) = std::env::current_exe() else {
+        return Vec::new();
+    };
+    let Some(directory) = exe.parent() else {
+        return Vec::new();
+    };
+    vec![
+        // bin/lark, with runtime/ beside bin/
+        directory.join("../runtime"),
+        // A prefix install, as in /usr/local/bin and /usr/local/share.
+        directory.join("../share/lark/runtime"),
+        // The binary and the runtime in one directory.
+        directory.join("runtime"),
+    ]
 }
 
 /// The name of the file that records the settings of a build. See rule F-2.

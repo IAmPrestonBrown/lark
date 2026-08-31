@@ -289,3 +289,41 @@ It runs, in order:
 9. The specification coverage report from P-6
 
 Continuous integration runs the same script. No push happens until it passes.
+
+---
+
+## 7. Releases
+
+### C-7.1 A tag names the version
+A release is a tag of the form `v<major>.<minor>.<patch>`. The tag and the
+`version` field in `Cargo.toml` must hold the same value. The release workflow
+compares them and stops when they differ.
+
+Raise the version in `Cargo.toml` first. Commit that change. Then tag the
+commit.
+
+```sh
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+### C-7.2 An archive stands on its own
+A release archive holds `bin/lark`, `bin/lark-lsp`, the runtime sources, the
+examples, the README, and the license. A managed program compiles the runtime,
+so the archive carries the C sources rather than a library built for one set of
+flags.
+
+`lark` looks for `runtime/` beside its own directory, so the archive works
+after one unpack and needs no environment variable.
+
+**Check.** The release workflow unpacks each archive outside the source tree
+and builds a managed program with it. A missing runtime file fails there, and
+no unit test finds that.
+
+### C-7.3 Run the gate before the tag
+The gate runs on every branch push. Push the branch, wait for the gate, and
+then tag the commit that passed.
+
+**Check.** `.github/workflows/release.yml` builds on four targets: Linux and
+macOS, on x86_64 and on aarch64. Each one builds on its own machine, so no
+build cross compiles.
