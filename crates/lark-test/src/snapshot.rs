@@ -21,6 +21,7 @@ pub enum Verdict {
 ///
 /// Bless mode rewrites every expected file from the actual output. Turn it on
 /// with the environment variable `LARK_BLESS=1`.
+#[must_use]
 pub fn bless_mode() -> bool {
     matches!(std::env::var("LARK_BLESS").as_deref(), Ok("1" | "true"))
 }
@@ -30,6 +31,7 @@ pub fn bless_mode() -> bool {
 /// In bless mode the function writes the file and returns [`Verdict::Blessed`].
 /// A missing file in normal mode is a mismatch, and the report says how to
 /// create it.
+#[must_use]
 pub fn compare(expected_path: &Path, actual: &str) -> Verdict {
     if bless_mode() {
         if let Some(parent) = expected_path.parent()

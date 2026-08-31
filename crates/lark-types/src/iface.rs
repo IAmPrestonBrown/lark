@@ -10,15 +10,14 @@
 //! | `LK0421` | O-21. The method name is ambiguous across two interfaces. |
 //! | `LK0430` | O-12. An interface function needs a receiver. |
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::BTreeMap;
 
 use lark_diag::{Diagnostic, Diagnostics, LK0410, LK0411, LK0412, LK0413, LK0420, LK0421, LK0430};
 use lark_span::{SourceId, Span};
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    DECL_SPECIFIERS, DECL_STMT, DECLARATION, DECLARATOR, FN_DEF, IDENT, IFACE_DEF, IFACE_METHOD,
+    IMPL_DEF, METHOD_EXPR, NAME, NAME_EXPR, NAME_REF, PARAM, PARAM_LIST, PATH, POINTER,
+};
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
 use crate::managed::{Managed, collect as collect_managed};
@@ -64,6 +63,7 @@ pub struct Interface {
 
 impl Interface {
     /// Returns the function with a name.
+    #[must_use]
     pub fn method(&self, name: &str) -> Option<&Method> {
         self.methods.iter().find(|method| method.name == name)
     }
@@ -95,6 +95,7 @@ pub struct Interfaces {
 
 impl Interfaces {
     /// Returns every interface that a type implements.
+    #[must_use]
     pub fn interfaces_of(&self, target: &str) -> Vec<&Implementation> {
         self.implementations
             .iter()
@@ -103,6 +104,7 @@ impl Interfaces {
     }
 
     /// Returns the implementations that declare a method name for a type.
+    #[must_use]
     pub fn find_method(&self, target: &str, method: &str) -> Vec<&Implementation> {
         self.implementations
             .iter()
@@ -113,6 +115,7 @@ impl Interfaces {
 }
 
 /// Reads every interface and implementation of one module.
+#[must_use]
 pub fn collect(root: &SyntaxNode) -> Interfaces {
     let mut found = Interfaces::default();
     for item in root.children() {

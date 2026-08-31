@@ -51,18 +51,21 @@ pub struct SourceFile {
 impl SourceFile {
     /// Returns the handle for this file.
     #[inline]
+    #[must_use]
     pub const fn id(&self) -> SourceId {
         self.id
     }
 
     /// Returns the path that the file came from.
     #[inline]
+    #[must_use]
     pub fn path(&self) -> &Path {
         &self.path
     }
 
     /// Returns the whole text of the file.
     #[inline]
+    #[must_use]
     pub fn text(&self) -> &str {
         &self.text
     }
@@ -71,6 +74,7 @@ impl SourceFile {
     ///
     /// A file with no newline holds one line. An empty file holds one line.
     #[inline]
+    #[must_use]
     pub fn line_count(&self) -> u32 {
         // The vector always holds at least one entry, so the cast is exact.
         u32::try_from(self.line_starts.len()).unwrap_or(u32::MAX)
@@ -80,6 +84,7 @@ impl SourceFile {
     ///
     /// An offset past the end of the file maps to the last position. An offset
     /// inside a multi byte character moves back to the start of that character.
+    #[must_use]
     pub fn line_col(&self, offset: u32) -> LineCol {
         let offset = self.clamp_to_boundary(offset);
         let line_index = self.line_index(offset);
@@ -94,6 +99,7 @@ impl SourceFile {
     /// Returns the text of one line, without its line ending.
     ///
     /// Returns `None` when the line number is outside the file.
+    #[must_use]
     pub fn line_text(&self, line: u32) -> Option<&str> {
         let span = self.line_span(line)?;
         Some(self.text[span.as_range()].trim_end_matches(['\r', '\n']))
@@ -102,6 +108,7 @@ impl SourceFile {
     /// Returns the span of one line, including its line ending.
     ///
     /// Returns `None` when the line number is outside the file.
+    #[must_use]
     pub fn line_span(&self, line: u32) -> Option<Span> {
         if line == 0 || line > self.line_count() {
             return None;
@@ -119,6 +126,7 @@ impl SourceFile {
     /// Returns the text that a span covers.
     ///
     /// Returns `None` when the span reaches past the end of the file.
+    #[must_use]
     pub fn span_text(&self, span: Span) -> Option<&str> {
         self.text.get(span.as_range())
     }
@@ -171,6 +179,7 @@ impl std::error::Error for FileTooLarge {}
 impl SourceMap {
     /// Builds an empty map.
     #[inline]
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -212,6 +221,7 @@ impl SourceMap {
     /// Panics when the handle came from a different map. A handle is only
     /// valid for the map that produced it.
     #[inline]
+    #[must_use]
     pub fn file(&self, id: SourceId) -> &SourceFile {
         assert!(
             id.index() < self.files.len(),
@@ -222,18 +232,21 @@ impl SourceMap {
 
     /// Returns every file in the map, in the order they were added.
     #[inline]
+    #[must_use]
     pub fn files(&self) -> &[SourceFile] {
         &self.files
     }
 
     /// Returns the number of files in the map.
     #[inline]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.files.len()
     }
 
     /// Reports whether the map holds no file.
     #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.files.is_empty()
     }

@@ -21,6 +21,7 @@ impl Span {
     /// Panics when `end` is less than `start`. A reversed span is always a
     /// defect in the caller, never bad input from a user.
     #[inline]
+    #[must_use]
     pub const fn new(start: u32, end: u32) -> Self {
         assert!(start <= end, "a span cannot end before it starts");
         Self { start, end }
@@ -28,6 +29,7 @@ impl Span {
 
     /// Builds an empty span at one offset.
     #[inline]
+    #[must_use]
     pub const fn at(offset: u32) -> Self {
         Self {
             start: offset,
@@ -37,12 +39,14 @@ impl Span {
 
     /// Returns the length of the span in bytes.
     #[inline]
+    #[must_use]
     pub const fn len(self) -> u32 {
         self.end - self.start
     }
 
     /// Reports whether the span covers no bytes.
     #[inline]
+    #[must_use]
     pub const fn is_empty(self) -> bool {
         self.start == self.end
     }
@@ -51,6 +55,7 @@ impl Span {
     ///
     /// An empty span contains no offset.
     #[inline]
+    #[must_use]
     pub const fn contains(self, offset: u32) -> bool {
         self.start <= offset && offset < self.end
     }
@@ -67,6 +72,7 @@ impl Span {
 
     /// Returns the span as a range, for slicing into the source text.
     #[inline]
+    #[must_use]
     pub const fn as_range(self) -> std::ops::Range<usize> {
         self.start as usize..self.end as usize
     }

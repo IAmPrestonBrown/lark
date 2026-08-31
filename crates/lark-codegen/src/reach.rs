@@ -19,15 +19,14 @@
 //! The analysis is conservative in one direction only. A function that it
 //! marks might not allocate. A function that it clears never allocates.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::{BTreeMap, BTreeSet};
 
 use lark_resolve::ModuleGraph;
-use lark_syntax::SyntaxKind::*;
-use lark_syntax::{SyntaxNode, all_tokens, child_tokens};
+use lark_syntax::SyntaxKind::{
+    ARG_LIST, CALL_EXPR, FN_DEF, GENERIC_ARGS, IDENT, METHOD_EXPR, NAME_EXPR, NAME_REF,
+    NEW_ARRAY_EXPR, NEW_EXPR, PATH,
+};
+use lark_syntax::{SyntaxNode, all_tokens};
 
 use crate::foreign::Foreign;
 use crate::names;
@@ -183,14 +182,4 @@ fn callee_name(call: &SyntaxNode) -> Option<String> {
             .last(),
         _ => None,
     }
-}
-
-/// Reports whether a declaration carries a name that the module defines.
-///
-/// The helper keeps `child_tokens` in use for a reader who follows the imports.
-#[allow(dead_code)]
-fn first_word(node: &SyntaxNode) -> Option<String> {
-    child_tokens(node)
-        .find(|token| token.kind() == IDENT)
-        .map(|token| token.text().to_owned())
 }

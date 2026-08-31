@@ -12,10 +12,6 @@
 //! `void *` and calls the real function. Casting a function pointer to another
 //! signature and calling it is undefined in C, and a thunk is not.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::fmt::Write as _;
 
 use lark_types::iface::{Implementation, Interface, Interfaces, Receiver};

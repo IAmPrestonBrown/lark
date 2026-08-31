@@ -4,6 +4,7 @@
 //! and it counts a character in UTF-16 code units.
 
 /// Turns a line and a character into a byte offset.
+#[must_use]
 pub fn to_offset(text: &str, line: u32, character: u32) -> u32 {
     let mut offset = 0usize;
 

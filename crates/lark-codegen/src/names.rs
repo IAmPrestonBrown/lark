@@ -3,11 +3,11 @@
 //! Rule X-5 keeps the name that the programmer wrote. Rule X-5a reserves the
 //! `lk_` prefix for a symbol that the transpiler generates.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    ARROW, DECL_SPECIFIERS, DECLARATION, DECLARATOR, DOT, ENUM_DEF, EXTERN_KW, FN_DEF,
+    GLOBAL_BLOCK, IDENT, IFACE_DEF, INIT_DECLARATOR, NAME, PARAM_LIST, PATH, POINTER, STATIC_KW,
+    STRUCT_DEF, TYPEDEF_KW, UNION_DEF,
+};
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
 /// The prefix that rule X-5a reserves for a generated symbol.
@@ -17,11 +17,13 @@ pub const GENERATED_PREFIX: &str = "lk_";
 const DROPPED_MARKERS: &[&str] = &["export", "gc", "managed", "init", "gc_leaf", "gc_safe"];
 
 /// Reports whether a name belongs to the generated space. See rule X-5a.
+#[must_use]
 pub fn is_generated_prefix(name: &str) -> bool {
     name.starts_with(GENERATED_PREFIX)
 }
 
 /// Returns the header file name for a module.
+#[must_use]
 pub fn module_header_name(module: &str) -> String {
     format!("{module}.h")
 }
@@ -30,6 +32,7 @@ pub fn module_header_name(module: &str) -> String {
 ///
 /// The check needs the position, because rule L-3 makes every one of these
 /// words an ordinary identifier elsewhere.
+#[must_use]
 pub fn is_dropped_marker(token: &SyntaxToken) -> bool {
     if token.kind() != IDENT || !DROPPED_MARKERS.contains(&token.text()) {
         return false;
@@ -52,6 +55,7 @@ pub fn is_dropped_marker(token: &SyntaxToken) -> bool {
 /// Returns the C name for the first token of a module path.
 ///
 /// Rule X-5 keeps the name, so `stdio::printf` becomes `printf`.
+#[must_use]
 pub fn module_path_text(token: &SyntaxToken) -> Option<String> {
     let parent = token.parent()?;
     if parent.kind() != PATH || is_member_path(&parent) {
@@ -72,6 +76,7 @@ pub fn module_path_text(token: &SyntaxToken) -> Option<String> {
 /// Reports whether a token is a part of a module path that the emitter drops.
 ///
 /// The first name carries the whole path, so the `::` and the second name go.
+#[must_use]
 pub fn is_dropped_path_part(token: &SyntaxToken) -> bool {
     let Some(parent) = token.parent() else {
         return false;
@@ -107,6 +112,7 @@ fn is_member_path(path: &SyntaxNode) -> bool {
 }
 
 /// Reports whether an item carries the `export` marker.
+#[must_use]
 pub fn is_exported(item: &SyntaxNode) -> bool {
     child_tokens(item)
         .find(|token| !token.kind().is_trivia())
@@ -114,6 +120,7 @@ pub fn is_exported(item: &SyntaxNode) -> bool {
 }
 
 /// Reports whether a declaration carries a C storage class.
+#[must_use]
 pub fn has_storage_class(item: &SyntaxNode) -> bool {
     item.children()
         .filter(|child| child.kind() == DECL_SPECIFIERS)
@@ -122,6 +129,7 @@ pub fn has_storage_class(item: &SyntaxNode) -> bool {
 }
 
 /// Reports whether a declaration introduces a variable rather than a prototype.
+#[must_use]
 pub fn declares_a_variable(item: &SyntaxNode) -> bool {
     declarators_of(item).iter().any(|declarator| {
         !declarator
@@ -133,6 +141,7 @@ pub fn declares_a_variable(item: &SyntaxNode) -> bool {
 /// Reports whether an item defines a type and declares no object.
 ///
 /// Rule X-4a puts such a definition in the header only.
+#[must_use]
 pub fn defines_a_type_only(item: &SyntaxNode) -> bool {
     if item.kind() != DECLARATION {
         return false;
@@ -155,6 +164,7 @@ pub fn defines_a_type_only(item: &SyntaxNode) -> bool {
 /// Reports whether an item defines a variable rather than a prototype.
 ///
 /// Rule X-4a gives such a definition an `extern` declaration in the header.
+#[must_use]
 pub fn defines_a_variable(item: &SyntaxNode) -> bool {
     if item.kind() != DECLARATION || defines_a_type_only(item) {
         return false;
@@ -172,6 +182,7 @@ pub fn defines_a_variable(item: &SyntaxNode) -> bool {
 /// Returns the name that an item introduces.
 ///
 /// A declaration that only defines a record yields the tag name.
+#[must_use]
 pub fn declared_name(item: &SyntaxNode) -> Option<String> {
     if let Some(declarator) = declarators_of(item).into_iter().next()
         && let Some(name) = name_in_declarator(&declarator)
@@ -208,6 +219,7 @@ fn name_in_declarator(declarator: &SyntaxNode) -> Option<String> {
 }
 
 /// Returns the declarators that belong to an item.
+#[must_use]
 pub fn declarators_of(item: &SyntaxNode) -> Vec<SyntaxNode> {
     let mut found = Vec::new();
     for child in item.children() {

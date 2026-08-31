@@ -274,7 +274,7 @@ none of those problems.
 **Method:** No `Rc<RefCell<T>>` in a compiler crate. A node holds a typed index.
 
 ## D041 - Two pedantic lints are allowed at workspace level
-**Status:** settled.
+**Status:** superseded by D159.
 **Reason:** Rule C-2.1 needs an entry here for a broad allow.
 **Allowed:** `clippy::module_name_repetitions`, because a crate named
 `lark-span` naturally holds a type named `Span` in a module named `span`.
@@ -1459,3 +1459,37 @@ benchmark builds against every collector and that the four collectors return
 the same checksum for the same work. `runtime/tests/test_growth.c` covers the
 policies directly, and it starts the runtime at the default size rather than at
 the size the other tests ask for.
+
+## D159 - A lint override names one file, not the whole workspace
+**Status:** settled.
+**Reason:** The workspace allowed `module_name_repetitions` and
+`must_use_candidate` for every crate. The first one fired nowhere, so the entry
+hid nothing and said nothing. The second one hid 144 real suggestions.
+**Method:** Both entries are gone. Every function that returns a value with no
+side effect carries `#[must_use]`, so a caller who drops the result gets a
+warning. Decision D041 no longer holds.
+
+## D160 - A glob import stays only where the list is unusable
+**Status:** settled.
+**Reason:** Twenty two files carried `#![allow(clippy::enum_glob_use)]`. Three
+of them had no glob import at all, so the suppression was stale. Most of the
+rest used fewer than twenty of the 184 kinds, so the list was short enough to
+write out.
+**Method:** Sixteen files now name the variants they use. Seven keep the glob,
+and each one walks 31 kinds or more. The comment on each states the count, so a
+reader checks the claim rather than trusts it.
+
+The used set came from the source text, matched against the real variant list.
+A compiler round trip cannot find it: a variant in a pattern position binds
+silently rather than failing to resolve, which turns a match arm into a catch
+all.
+
+## D161 - A public function returns a type that a caller can name
+**Status:** settled.
+**Reason:** `SourceMap::add` returned `Result<SourceId, FileTooLarge>`, and
+`lark-span` exported neither `FileTooLarge` nor `MAX_SOURCE_LEN`. A caller
+could not match on the error, store it, or name it. The documentation check
+found it as a link to a private item.
+**Method:** Both are exported. `cargo doc` with `-D warnings` runs in the gate,
+so the next one fails the build rather than reaching a reader.
+

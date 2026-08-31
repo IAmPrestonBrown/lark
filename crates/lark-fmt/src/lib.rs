@@ -37,8 +37,9 @@
 //! rest is left as it stands. An editor holds a file in that state most of the
 //! time.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
+// This module walks 41 of the kinds, and a list that long in the header helps
+// no reader, so it imports the variants. A module that uses a few names spells
+// them out instead.
 #![allow(clippy::enum_glob_use)]
 
 use lark_syntax::SyntaxKind::*;

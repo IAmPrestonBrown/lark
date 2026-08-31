@@ -8,10 +8,6 @@
 //! across it. Each instantiation belongs to the module that declares the
 //! generic.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 pub mod mangle;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -19,7 +15,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use lark_diag::{Diagnostic, Diagnostics, LK0400, LK0500, LK0501, LK0502};
 use lark_resolve::ModuleGraph;
 use lark_span::{SourceId, Span};
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    CALL_EXPR, DECL_SPECIFIERS, DECLARATION, DECLARATOR, FN_DEF, GENERIC_ARGS, GENERIC_PARAMS,
+    IDENT, NAME, NAME_EXPR, NAME_REF, PATH, STRUCT_BODY, STRUCT_DEF, TYPE_NAME, UNION_DEF,
+};
 use lark_syntax::{SyntaxNode, child_tokens};
 
 /// How deep one instantiation can reach into another. See rule G-8.
@@ -84,6 +83,7 @@ impl Instance {
     ///
     /// Rule G-10 decides per instantiation. An instance with no managed field
     /// carries no header and costs what a plain struct costs.
+    #[must_use]
     pub fn needs_header(&self, marked: bool, field_uses_parameter: &[bool]) -> bool {
         if !marked {
             return false;
@@ -111,6 +111,7 @@ impl Program {
     }
 
     /// Returns the generic that a name introduces.
+    #[must_use]
     pub fn generic(&self, name: &str) -> Option<&Generic> {
         self.generics.get(name)
     }
@@ -540,6 +541,7 @@ fn split_arguments(text: &str) -> Vec<&str> {
 /// instantiation rather than repeat the Lark spelling, which no C compiler
 /// reads. The result is the name that `Program::instances` also carries, so
 /// the use and the definition agree by construction.
+#[must_use]
 pub fn resolve(program: &Program, text: &str) -> String {
     let Some(open) = text.find('<') else {
         return text.to_owned();

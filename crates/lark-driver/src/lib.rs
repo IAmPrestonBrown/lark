@@ -55,11 +55,13 @@ pub struct Build {
 
 impl Build {
     /// Reports whether any pass rejected the program.
+    #[must_use]
     pub fn failed(&self) -> bool {
         self.diagnostics.has_errors()
     }
 
     /// Returns every diagnostic, rendered.
+    #[must_use]
     pub fn report(&self) -> String {
         lark_diag::render_all(&self.diagnostics, &self.sources)
     }

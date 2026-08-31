@@ -56,6 +56,7 @@ impl From<std::io::Error> for ExecError {
 /// Returns the C compiler that the harness uses.
 ///
 /// The environment variable `LARK_CC` wins. The default is `cc`.
+#[must_use]
 pub fn c_compiler() -> String {
     std::env::var("LARK_CC").unwrap_or_else(|_| "cc".to_owned())
 }
@@ -198,6 +199,7 @@ pub fn build_and_run_full(
 /// Returns a scratch directory for one fixture run.
 ///
 /// The directory sits under `target/`, so `cargo clean` removes it.
+#[must_use]
 pub fn scratch_directory(root: &Path, key: &str) -> PathBuf {
     let safe: String = key
         .chars()

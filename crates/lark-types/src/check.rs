@@ -9,13 +9,12 @@
 //! | `LK0210` | T-9. An `auto` declaration needs an initializer. |
 //! | `LK0211` | T-11. `auto` is not valid in this position. |
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use lark_diag::{Diagnostic, Diagnostics, LK0200, LK0210, LK0211};
 use lark_span::{SourceId, Span};
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    AUTO_KW, DECL_SPECIFIERS, DECL_STMT, DECLARATION, DECLARATOR, EQ, FIELD_DECL, FN_DEF,
+    GLOBAL_BLOCK, IDENT, IFACE_METHOD, INIT_DECLARATOR, PARAM,
+};
 use lark_syntax::{SyntaxNode, child_tokens};
 
 use crate::lower::Lowering;

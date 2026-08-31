@@ -23,11 +23,13 @@ pub enum SymbolKind {
 
 impl SymbolKind {
     /// Reports whether a name of this kind can appear in a type position.
+    #[must_use]
     pub const fn is_type(self) -> bool {
         matches!(self, Self::Type | Self::Iface)
     }
 
     /// Returns the word that a diagnostic uses for this kind.
+    #[must_use]
     pub const fn word(self) -> &'static str {
         match self {
             Self::Type => "type",
@@ -49,6 +51,7 @@ pub enum Visibility {
 
 impl Visibility {
     /// Reports whether a module that imports this one can use the symbol.
+    #[must_use]
     pub const fn is_exported(self) -> bool {
         matches!(self, Self::Exported)
     }
@@ -77,6 +80,7 @@ pub struct SymbolTable {
 
 impl SymbolTable {
     /// Builds an empty table.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -106,11 +110,13 @@ impl SymbolTable {
     }
 
     /// Returns the symbol for a name.
+    #[must_use]
     pub fn get(&self, name: &str) -> Option<&Symbol> {
         self.symbols.get(name)
     }
 
     /// Reports whether the table holds a name that binds to a type.
+    #[must_use]
     pub fn is_type(&self, name: &str) -> bool {
         self.get(name).is_some_and(|symbol| symbol.kind.is_type())
     }
@@ -121,11 +127,13 @@ impl SymbolTable {
     }
 
     /// Returns the number of symbols.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.symbols.len()
     }
 
     /// Reports whether the table holds no symbol.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.symbols.is_empty()
     }

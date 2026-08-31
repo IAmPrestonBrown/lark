@@ -16,8 +16,9 @@
 //! A later phase adds the machinery that a managed program needs: the object
 //! header, the shadow stack, the method tables, and the monomorphic generics.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
+// This module walks 64 of the kinds, and a list that long in the header helps
+// no reader, so it imports the variants. A module that uses a few names spells
+// them out instead.
 #![allow(clippy::enum_glob_use)]
 
 mod foreign;
@@ -79,6 +80,7 @@ pub enum Roots {
 
 impl Roots {
     /// Returns the runtime constant for the mode.
+    #[must_use]
     pub const fn constant(self) -> &'static str {
         match self {
             Self::ShadowStack => "LARK_ROOTS_SHADOW_STACK",
@@ -87,6 +89,7 @@ impl Roots {
     }
 
     /// Reads the mode from the value that `lark.toml` holds.
+    #[must_use]
     pub fn parse(value: &str) -> Self {
         if value == "conservative" {
             Self::Conservative
@@ -138,6 +141,7 @@ pub struct Emitted {
 
 impl Emitted {
     /// Returns the line map in the form that a snapshot test compares.
+    #[must_use]
     pub fn line_map_text(&self, source_name: &str) -> String {
         let mut out = String::new();
         for entry in &self.line_map {
@@ -148,6 +152,7 @@ impl Emitted {
 }
 
 /// Emits the C for one module.
+#[must_use]
 pub fn emit(
     graph: &ModuleGraph,
     id: ModuleId,

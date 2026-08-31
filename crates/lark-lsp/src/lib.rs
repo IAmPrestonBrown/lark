@@ -8,10 +8,6 @@
 //! produces a tree. Invariant R keeps every token, so a position always lands
 //! on something.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 pub mod position;
 pub mod scope;
 pub mod server;
@@ -22,7 +18,7 @@ use std::path::{Path, PathBuf};
 use lark_diag::Diagnostics;
 use lark_resolve::{FileLoader, Resolution, SymbolKind, resolve};
 use lark_span::Span;
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{ARROW, COLON2, DOT, IDENT, PATH};
 use lark_syntax::{SyntaxNode, SyntaxToken};
 use lark_types::iface::Interfaces;
 use lark_types::managed::Managed;
@@ -52,6 +48,7 @@ pub enum CompletionKind {
 
 impl CompletionKind {
     /// Returns the word that a report prints.
+    #[must_use]
     pub const fn word(self) -> &'static str {
         match self {
             Self::Module => "module",
@@ -124,6 +121,7 @@ const KEYWORDS: &[(&str, &str)] = &[
 
 impl Analysis {
     /// Reads a file and everything it imports.
+    #[must_use]
     pub fn new(name: &str, path: &Path, text: &str, search: &[PathBuf]) -> Self {
         let loader = FileLoader::new(search.to_vec());
         let resolution = resolve(&loader, name, path, text);
@@ -139,6 +137,7 @@ impl Analysis {
     }
 
     /// Returns every problem that the passes found.
+    #[must_use]
     pub fn diagnostics(&self) -> &Diagnostics {
         &self.diagnostics
     }
@@ -155,6 +154,7 @@ impl Analysis {
     }
 
     /// Returns what the server offers at an offset.
+    #[must_use]
     pub fn completions(&self, offset: u32) -> Vec<Completion> {
         let Some(root) = self.tree() else {
             return Vec::new();
@@ -170,6 +170,7 @@ impl Analysis {
     }
 
     /// Returns what the cursor sits on.
+    #[must_use]
     pub fn hover(&self, offset: u32) -> Option<Hover> {
         let root = self.tree()?;
         let token = ident_at_or_before(&root, offset)?;
@@ -211,6 +212,7 @@ impl Analysis {
     }
 
     /// Returns where the symbol under the cursor is declared.
+    #[must_use]
     pub fn definition(&self, offset: u32) -> Option<Location> {
         let root = self.tree()?;
         let token = ident_at_or_before(&root, offset)?;
@@ -412,6 +414,7 @@ pub enum Query {
 
 impl Query {
     /// Reads a query from the word that a fixture writes.
+    #[must_use]
     pub fn parse(text: &str) -> Option<Self> {
         match text.trim() {
             "completion" => Some(Self::Completion),

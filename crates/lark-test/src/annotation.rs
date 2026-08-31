@@ -61,6 +61,7 @@ pub struct Annotations {
 /// handle_opaque_data(count);
 /// //~^ ERROR LK0301
 /// ```
+#[must_use]
 pub fn parse(text: &str) -> Annotations {
     let mut annotations = Annotations::default();
 

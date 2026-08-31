@@ -29,6 +29,7 @@ pub enum IntWidth {
 
 impl IntWidth {
     /// Returns the rank that the usual arithmetic conversions use.
+    #[must_use]
     pub const fn rank(self) -> u8 {
         match self {
             Self::Bool => 0,
@@ -159,6 +160,7 @@ impl Default for TypeStore {
 
 impl TypeStore {
     /// Builds a store that holds the common types.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             types: Vec::new(),
@@ -198,6 +200,7 @@ impl TypeStore {
     /// Returns the type for a handle.
     ///
     /// A handle from another store yields the error type.
+    #[must_use]
     pub fn kind(&self, id: TypeId) -> &TypeKind {
         self.types.get(id.0 as usize).unwrap_or(&TypeKind::Error)
     }
@@ -218,21 +221,25 @@ impl TypeStore {
     }
 
     /// Reports whether a type is the unknown type.
+    #[must_use]
     pub fn is_error(&self, id: TypeId) -> bool {
         matches!(self.kind(id), TypeKind::Error)
     }
 
     /// Reports whether a type is a pointer.
+    #[must_use]
     pub fn is_pointer(&self, id: TypeId) -> bool {
         matches!(self.kind(id), TypeKind::Pointer { .. })
     }
 
     /// Reports whether a pointer carries the `gc` qualifier.
+    #[must_use]
     pub fn is_managed(&self, id: TypeId) -> bool {
         matches!(self.kind(id), TypeKind::Pointer { managed: true, .. })
     }
 
     /// Reports whether a type is an integer or a floating type.
+    #[must_use]
     pub fn is_arithmetic(&self, id: TypeId) -> bool {
         matches!(self.kind(id), TypeKind::Int { .. } | TypeKind::Float(_))
     }
@@ -250,6 +257,7 @@ impl TypeStore {
     }
 
     /// Returns the type in the form that a diagnostic prints.
+    #[must_use]
     pub fn display(&self, id: TypeId) -> String {
         let mut out = String::new();
         self.write(&mut out, id);

@@ -4,14 +4,13 @@
 //! when the marker is required. Rule M-5 says the field map lists the byte
 //! offset of every managed field, so heap tracing is precise.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::BTreeMap;
 
 use lark_span::Span;
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    DECL_SPECIFIERS, DECLARATOR, ENUM_BODY, ENUM_DEF, ENUM_KW, FIELD_DECL, GENERIC_PARAMS, IDENT,
+    IMPL_DEF, NAME, NAME_REF, POINTER, STRUCT_BODY, STRUCT_DEF, STRUCT_KW, UNION_DEF, UNION_KW,
+};
 use lark_syntax::{SyntaxNode, child_tokens};
 
 /// One field of a record.
@@ -36,6 +35,7 @@ pub enum Keyword {
 
 impl Keyword {
     /// Returns the word as C spells it.
+    #[must_use]
     pub const fn text(self) -> &'static str {
         match self {
             Self::Struct => "struct",
@@ -71,6 +71,7 @@ impl Record {
     ///
     /// Rule O-2 requires the marker when the record holds a managed field, or
     /// when an implementation targets it.
+    #[must_use]
     pub fn needs_header(&self, has_impl: bool) -> bool {
         has_impl || self.fields.iter().any(|field| field.managed)
     }
@@ -92,11 +93,13 @@ pub struct Managed {
 
 impl Managed {
     /// Reports whether an implementation targets a type.
+    #[must_use]
     pub fn has_impl(&self, name: &str) -> bool {
         self.implemented.iter().any(|target| target == name)
     }
 
     /// Reports whether a type name needs an object header.
+    #[must_use]
     pub fn needs_header(&self, name: &str) -> bool {
         self.records
             .get(name)
@@ -124,12 +127,14 @@ impl Managed {
     }
 
     /// Reports whether the module declares a managed record by that name.
+    #[must_use]
     pub fn has_record(&self, name: &str) -> bool {
         self.records.contains_key(name)
     }
 }
 
 /// Reads every record and every implementation target of one module.
+#[must_use]
 pub fn collect(root: &SyntaxNode) -> Managed {
     let mut found = Managed::default();
 

@@ -56,6 +56,7 @@ pub fn all_tokens(node: &SyntaxNode) -> impl Iterator<Item = SyntaxToken> + '_ {
 ///     DECL_SPECIFIERS@0..3
 ///       INT_KW@0..3 "int"
 /// ```
+#[must_use]
 pub fn print(node: &SyntaxNode) -> String {
     let mut out = String::new();
     print_into(&mut out, &node.clone().into(), 0);

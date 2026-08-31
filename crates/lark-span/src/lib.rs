@@ -9,5 +9,5 @@
 mod source;
 mod span;
 
-pub use source::{LineCol, SourceFile, SourceId, SourceMap};
+pub use source::{FileTooLarge, LineCol, MAX_SOURCE_LEN, SourceFile, SourceId, SourceMap};
 pub use span::Span;

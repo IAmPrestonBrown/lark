@@ -24,6 +24,7 @@ pub enum Roots {
 
 impl Roots {
     /// Returns the value that `lark.toml` uses.
+    #[must_use]
     pub const fn name(self) -> &'static str {
         match self {
             Self::ShadowStack => "shadow-stack",
@@ -47,11 +48,13 @@ pub enum Collector {
 
 impl Collector {
     /// Reports whether the collector follows an interior pointer. Rule M-8.
+    #[must_use]
     pub const fn interior_pointers(self) -> bool {
         !self.moving()
     }
 
     /// Reports whether a collection frees what nothing reaches.
+    #[must_use]
     pub const fn reclaims(self) -> bool {
         !matches!(self, Self::Arena)
     }
@@ -62,6 +65,7 @@ impl Collector {
     /// A collector that lacks the capability skips the fixture, exactly as the
     /// runtime tests skip a case that does not apply. Rule R-1 gives the same
     /// answer to the transpiler at build time.
+    #[must_use]
     pub fn meets(self, needs: &[String]) -> bool {
         needs.iter().all(|need| match need.as_str() {
             "interior-pointers" => self.interior_pointers(),
@@ -74,6 +78,7 @@ impl Collector {
     }
 
     /// Returns the value that `gc.strategy` uses.
+    #[must_use]
     pub const fn name(self) -> &'static str {
         match self {
             Self::PreciseMarkSweep => "precise-marksweep",
@@ -88,11 +93,13 @@ impl Collector {
     /// A moving collector must write a new address into every root, and a
     /// rule M-13 conservative scan cannot say which words are roots. So it
     /// accepts rule M-10 shadow stack roots alone.
+    #[must_use]
     pub const fn moving(self) -> bool {
         matches!(self, Self::Semispace | Self::Generational)
     }
 
     /// Reports whether the collector accepts a root mechanism.
+    #[must_use]
     pub const fn accepts(self, roots: Roots) -> bool {
         match roots {
             Roots::ShadowStack => true,
@@ -116,6 +123,7 @@ impl Config {
     /// Returns the four combinations that principles P-3 and P-4 require.
     ///
     /// Each one links the default collector. `full_matrix` adds the others.
+    #[must_use]
     pub const fn matrix() -> [Self; 4] {
         [
             Self {
@@ -146,6 +154,7 @@ impl Config {
     /// A combination that the collector refuses is left out, so every entry
     /// names a build that can run. Principle P-3 asks for the whole matrix,
     /// and a collector is one more axis of it.
+    #[must_use]
     pub fn full_matrix() -> Vec<Self> {
         let mut all = Vec::new();
         for collector in [
@@ -171,6 +180,7 @@ impl Config {
     }
 
     /// Returns the suffix that a test name carries for this configuration.
+    #[must_use]
     pub fn suffix(self) -> String {
         let torture = if self.torture { "torture" } else { "normal" };
         if self.collector == Collector::PreciseMarkSweep {
@@ -253,7 +263,7 @@ pub struct Output {
 
 /// A front end that the harness can drive.
 ///
-/// Phase 0 ships [`StubCompiler`]. Later phases replace it with the driver.
+/// [`FrontEnd`] implements it over the driver.
 pub trait Compile: Send + Sync {
     /// Runs the front end over one input.
     fn compile(&self, input: &Input) -> Output;

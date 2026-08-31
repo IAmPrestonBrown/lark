@@ -219,6 +219,7 @@ impl Config {
     ///
     /// The search walks up from the file, so a package works from any
     /// subdirectory.
+    #[must_use]
     pub fn root_for(directory: &Path) -> PathBuf {
         match Self::find(directory) {
             Some(path) => path.parent().unwrap_or(directory).to_path_buf(),
@@ -277,6 +278,7 @@ impl Config {
     /// Returns the directory that holds the runtime.
     ///
     /// A build that needs no managed memory never calls this.
+    #[must_use]
     pub fn runtime_path(&self, root: &Path) -> Option<PathBuf> {
         let mut candidates = Vec::new();
         if !self.build.runtime.as_os_str().is_empty() {
@@ -293,6 +295,7 @@ impl Config {
     }
 
     /// Returns the search path that rule N-3 uses, relative to a root.
+    #[must_use]
     pub fn search_paths(&self, root: &Path) -> Vec<PathBuf> {
         self.paths
             .search

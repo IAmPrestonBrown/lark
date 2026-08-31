@@ -8,7 +8,7 @@
 //!   by rule T-1a.
 //! - [`infer`] computes the type of an expression, and the type that `auto`
 //!   infers from an initializer.
-//! - [`check`] enforces the type rules that phase 3 delivers.
+//! - [`check`](mod@check) enforces the type rules that phase 3 delivers.
 //!
 //! The checks report only what the front end can decide. Delivery phase A does
 //! not read headers, so an unknown name is not an error here.
@@ -34,6 +34,7 @@ pub use check::check;
 /// Rule I-1 needs one `init` function in a program that uses managed memory. A
 /// single module that a tool checks on its own is not a program, so the build
 /// runs this and the check does not.
+#[must_use]
 pub fn check_program(resolution: &Resolution) -> Diagnostics {
     let mut out = Diagnostics::new();
     let mut total = 0;
@@ -57,6 +58,7 @@ pub use ty::{Common, FloatWidth, IntWidth, NamedKind, TypeId, TypeKind, TypeStor
 /// Runs the type checks over every module of a resolution.
 ///
 /// The diagnostics join the ones that the resolver produced.
+#[must_use]
 pub fn check_resolution(resolution: &Resolution) -> Diagnostics {
     check_resolution_with(resolution, caps::Capabilities::default())
 }
@@ -66,6 +68,7 @@ pub fn check_resolution(resolution: &Resolution) -> Diagnostics {
 /// Rule R-1. A collector that lacks a capability makes the transpiler reject
 /// the source rules that depend on it. The language does not change with the
 /// collector. The set of programs that it accepts does.
+#[must_use]
 pub fn check_resolution_with(
     resolution: &Resolution,
     capabilities: caps::Capabilities,

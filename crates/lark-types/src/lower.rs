@@ -4,8 +4,9 @@
 //! declarator wraps it in pointers, arrays, and parameter lists. Rule T-1a
 //! places the `gc` qualifier on the pointer levels.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
+// This module walks 31 of the kinds, and a list that long in the header helps
+// no reader, so it imports the variants. A module that uses a few names spells
+// them out instead.
 #![allow(clippy::enum_glob_use)]
 
 use lark_syntax::SyntaxKind::*;

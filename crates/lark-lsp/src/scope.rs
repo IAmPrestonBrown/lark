@@ -3,13 +3,14 @@
 //! A language server answers about a position, so it needs the locals of the
 //! function that holds the position, not only the module table.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::BTreeMap;
 
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    ALIGNOF_EXPR, ASSIGN_EXPR, AUTO_KW, BIN_EXPR, CALL_EXPR, CAST_EXPR, COMPOUND_LITERAL_EXPR,
+    COND_EXPR, DECL_SPECIFIERS, DECL_STMT, DECLARATION, DECLARATOR, FIELD_EXPR, FN_DEF, INDEX_EXPR,
+    INIT_DECLARATOR, LITERAL_EXPR, METHOD_EXPR, NAME, NAME_EXPR, NAME_REF, NEW_ARRAY_EXPR,
+    NEW_EXPR, PARAM, PAREN_EXPR, PATH, POINTER, POSTFIX_EXPR, PREFIX_EXPR, SIZEOF_EXPR,
+};
 use lark_syntax::SyntaxNode;
 use lark_types::{Infer, Lowering, TypeStore};
 
@@ -30,6 +31,7 @@ pub struct Local {
 ///
 /// A declaration is in scope from its own declarator to the end of its block,
 /// which is rule L-16 applied to a position rather than to a parse.
+#[must_use]
 pub fn locals_at(root: &SyntaxNode, offset: u32) -> BTreeMap<String, Local> {
     let mut found = BTreeMap::new();
     let Some(function) = enclosing_function(root, offset) else {
@@ -68,6 +70,7 @@ pub fn locals_at(root: &SyntaxNode, offset: u32) -> BTreeMap<String, Local> {
 }
 
 /// Returns the function definition that holds an offset.
+#[must_use]
 pub fn enclosing_function(root: &SyntaxNode, offset: u32) -> Option<SyntaxNode> {
     root.descendants()
         .filter(|node| node.kind() == FN_DEF)
@@ -178,6 +181,7 @@ fn collect_names(declarator: &SyntaxNode, out: &mut Vec<(String, u32)>) {
 }
 
 /// Reports whether a node kind is an expression.
+#[must_use]
 pub fn is_expression(kind: lark_syntax::SyntaxKind) -> bool {
     matches!(
         kind,

@@ -61,6 +61,7 @@ pub struct ModuleGraph {
 
 impl ModuleGraph {
     /// Builds an empty graph.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -74,11 +75,13 @@ impl ModuleGraph {
     }
 
     /// Returns the handle for a file that the graph already holds.
+    #[must_use]
     pub fn id_of_path(&self, path: &Path) -> Option<ModuleId> {
         self.by_path.get(path).copied()
     }
 
     /// Returns the module for a handle.
+    #[must_use]
     pub fn get(&self, id: ModuleId) -> Option<&Module> {
         self.modules.get(id)
     }
@@ -89,21 +92,25 @@ impl ModuleGraph {
     }
 
     /// Returns every module, in load order.
+    #[must_use]
     pub fn modules(&self) -> &[Module] {
         &self.modules
     }
 
     /// Returns the number of modules.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.modules.len()
     }
 
     /// Reports whether the graph holds no module.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.modules.is_empty()
     }
 
     /// Returns the module that one module imports under a name.
+    #[must_use]
     pub fn import_target(&self, from: ModuleId, name: &str) -> Option<ModuleId> {
         let module = self.get(from)?;
         module

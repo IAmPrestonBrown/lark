@@ -26,6 +26,9 @@ if [ -f Cargo.toml ]; then
     run "cargo fmt"    cargo fmt --all --check
     run "cargo clippy" cargo clippy --workspace --all-targets --all-features -- -D warnings
     run "cargo test"   cargo test --workspace
+    # A broken documentation link points a reader at nothing, and a link to a
+    # private item usually means the item belongs in the public API.
+    run "cargo doc"    env RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
 else
     echo "== rust =="
     echo "skip check-rust: no Cargo.toml yet"

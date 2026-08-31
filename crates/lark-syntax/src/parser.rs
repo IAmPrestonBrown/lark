@@ -11,14 +11,14 @@
 //!
 //! [`NoNames`]: crate::oracle::NoNames
 
-// A parser matches on kinds constantly. Naming the enum on every arm hides the
-// grammar behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use lark_diag::{Code, LK0102, LK0110};
 use lark_span::Span;
 use rowan::{Checkpoint, GreenNode, GreenNodeBuilder};
 
+// The parser matches on nearly every variant of the enum, so it imports
+// them all. Rule C-2.1 asks for the shape of the walk to stay readable,
+// and a list of 175 names in the header does not help a reader.
+#[allow(clippy::enum_glob_use)]
 use crate::kind::SyntaxKind::{self, *};
 use crate::lexer::{Token, tokenize};
 use crate::oracle::{Binding, NameOracle};
@@ -42,11 +42,13 @@ pub struct Parse {
 
 impl Parse {
     /// Returns the root of the tree.
+    #[must_use]
     pub fn syntax(&self) -> SyntaxNode {
         SyntaxNode::new_root(self.green.clone())
     }
 
     /// Returns every problem, in source order.
+    #[must_use]
     pub fn errors(&self) -> &[SyntaxError] {
         &self.errors
     }
@@ -54,11 +56,13 @@ impl Parse {
     /// Returns the text of the whole tree.
     ///
     /// The result equals the source. That is invariant R.
+    #[must_use]
     pub fn text(&self) -> String {
         self.syntax().text().to_string()
     }
 
     /// Returns the tree in the form that a snapshot test compares.
+    #[must_use]
     pub fn tree_text(&self) -> String {
         crate::tree::print(&self.syntax())
     }

@@ -45,6 +45,7 @@ pub const KINDS: &[Kind] = &[
 
 impl Kind {
     /// Returns the short name that a test report prints.
+    #[must_use]
     pub const fn name(self) -> &'static str {
         match self {
             Self::Parse => "parse",
@@ -59,6 +60,7 @@ impl Kind {
     }
 
     /// Returns the directory that holds the fixtures, relative to the repository root.
+    #[must_use]
     pub const fn directory(self) -> &'static str {
         match self {
             Self::Parse => "tests/corpus/parse",
@@ -73,6 +75,7 @@ impl Kind {
     }
 
     /// Returns the extension of an input file for this kind.
+    #[must_use]
     pub const fn input_extension(self) -> &'static str {
         match self {
             Self::C11 => "c",
@@ -84,6 +87,7 @@ impl Kind {
     ///
     /// A [`Kind::Ui`] fixture carries its expectations inline, so it has none.
     /// A [`Kind::C11`] fixture expects no diagnostic, so it has none.
+    #[must_use]
     pub const fn expected_extension(self) -> Option<&'static str> {
         match self {
             Self::Parse => Some("tree"),
@@ -96,6 +100,7 @@ impl Kind {
     }
 
     /// Reports whether the kind builds and runs a binary.
+    #[must_use]
     pub const fn runs_a_binary(self) -> bool {
         matches!(self, Self::Exec | Self::Gc)
     }

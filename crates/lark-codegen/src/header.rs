@@ -3,14 +3,13 @@
 //! Rule X-4 puts every exported declaration in the header, and nothing else.
 //! A module that imports another one includes its header.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::fmt::Write as _;
 
 use lark_resolve::Module;
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    BLOCK_STMT, COMMA, EQ, IFACE_DEF, IMPORT_DIRECTIVE, INIT_DECLARATOR, NAME, SEMICOLON,
+    WHITESPACE,
+};
 use lark_syntax::{SyntaxNode, all_tokens};
 use lark_types::Managed;
 use lark_types::iface::Interfaces;

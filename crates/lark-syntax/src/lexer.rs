@@ -44,6 +44,7 @@ impl Lexed {
     /// Joins the text of every token back together.
     ///
     /// The result equals the input. See rule L-13.
+    #[must_use]
     pub fn join(&self, source: &str) -> String {
         let mut out = String::with_capacity(source.len());
         for token in &self.tokens {
@@ -126,6 +127,7 @@ const LITERAL_PREFIXES: &[&str] = &["L", "u", "U", "u8"];
 ///
 /// The lexer never fails. A problem produces a diagnostic and a token, so the
 /// text stays complete.
+#[must_use]
 pub fn tokenize(source: &str) -> Lexed {
     Cursor::new(source).run()
 }

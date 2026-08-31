@@ -62,6 +62,7 @@ impl Diagnostic {
     /// Builds a diagnostic from a code and the region it belongs to.
     ///
     /// The severity and the message come from the catalogue.
+    #[must_use]
     pub fn new(code: Code, file: SourceId, span: Span) -> Self {
         let (severity, message) = match code.info() {
             Some(info) => (info.severity, info.message.to_owned()),
@@ -134,6 +135,7 @@ pub struct Diagnostics {
 
 impl Diagnostics {
     /// Builds an empty collection.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -144,6 +146,7 @@ impl Diagnostics {
     }
 
     /// Returns every diagnostic, in the order they arrived.
+    #[must_use]
     pub fn items(&self) -> &[Diagnostic] {
         &self.items
     }
@@ -157,16 +160,19 @@ impl Diagnostics {
     }
 
     /// Reports whether any diagnostic stops the compiler from accepting the input.
+    #[must_use]
     pub fn has_errors(&self) -> bool {
         self.items.iter().any(|item| item.severity.is_fatal())
     }
 
     /// Returns the number of diagnostics.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.items.len()
     }
 
     /// Reports whether the collection holds no diagnostic.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
@@ -181,6 +187,7 @@ impl Diagnostics {
     }
 
     /// Returns the diagnostics and consumes the collection.
+    #[must_use]
     pub fn into_items(self) -> Vec<Diagnostic> {
         self.items
     }

@@ -1,7 +1,7 @@
 //! The protocol side of the language server.
 //!
 //! The server speaks JSON-RPC over standard input and output, and asks
-//! [`Analysis`](crate::Analysis) for every answer. It uses raw JSON rather than
+//! [`Analysis`] for every answer. It uses raw JSON rather than
 //! a types crate, so the protocol surface stays small and stable.
 
 use std::collections::BTreeMap;

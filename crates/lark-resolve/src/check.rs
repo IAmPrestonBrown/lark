@@ -4,13 +4,12 @@
 //! come from `#include`. The checks therefore report only what they can decide:
 //! a qualified path, an export, and a generic base name in a complete module.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use lark_diag::{Diagnostic, Diagnostics, LK0100, LK0600, LK0610, LK0611, LK0612, LK0613};
 use lark_span::SourceId;
-use lark_syntax::SyntaxKind::{self, *};
+use lark_syntax::SyntaxKind::{
+    self, ARROW, BLOCK_STMT, DECL_SPECIFIERS, DECLARATION, DOT, FN_DEF, GENERIC_ARGS, IDENT,
+    IFACE_DEF, NAME_REF, PATH, TYPE_NAME,
+};
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
 use crate::collect::span_of;

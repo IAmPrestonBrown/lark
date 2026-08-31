@@ -15,6 +15,7 @@ pub enum Severity {
 
 impl Severity {
     /// Returns the word that the renderer prints.
+    #[must_use]
     pub const fn label(self) -> &'static str {
         match self {
             Self::Error => "error",
@@ -25,6 +26,7 @@ impl Severity {
     }
 
     /// Reports whether the severity stops the compiler from accepting the input.
+    #[must_use]
     pub const fn is_fatal(self) -> bool {
         matches!(self, Self::Error)
     }
@@ -45,6 +47,7 @@ pub struct Code(u16);
 
 impl Code {
     /// Returns the numeric part of the code.
+    #[must_use]
     pub const fn number(self) -> u16 {
         self.0
     }
@@ -52,6 +55,7 @@ impl Code {
     /// Returns the catalogue entry for the code.
     ///
     /// Returns `None` for a code that the catalogue does not list.
+    #[must_use]
     pub fn info(self) -> Option<&'static CodeInfo> {
         CATALOG
             .binary_search_by_key(&self.0, |entry| entry.code.0)
@@ -63,6 +67,7 @@ impl Code {
     ///
     /// Returns `None` when the text does not have the shape of a code, or when
     /// the catalogue does not list it.
+    #[must_use]
     pub fn parse(text: &str) -> Option<Self> {
         let digits = text.strip_prefix("LK")?;
         if digits.len() != 4 || !digits.bytes().all(|byte| byte.is_ascii_digit()) {

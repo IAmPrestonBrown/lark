@@ -14,6 +14,7 @@
 /// | `T*` | `P` and the mangle of `T` |
 /// | `gc T*` | `G` and the mangle of `T` |
 /// | A user type | The length of the name, then the name |
+#[must_use]
 pub fn argument(text: &str) -> String {
     let trimmed = text.trim();
 
@@ -63,6 +64,7 @@ pub fn argument(text: &str) -> String {
 }
 
 /// Returns the C name of one instantiation. See rule X-5a.
+#[must_use]
 pub fn instance(module: &str, name: &str, arguments: &[String]) -> String {
     let mangled: String = arguments.iter().map(|text| argument(text)).collect();
     format!("lk_{module}__{name}__{mangled}")

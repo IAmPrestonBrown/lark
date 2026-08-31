@@ -18,6 +18,7 @@ use crate::snapshot::{Verdict, compare};
 ///
 /// The path comes from the manifest directory of this crate, so it works from
 /// any working directory.
+#[must_use]
 pub fn repository_root() -> PathBuf {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let root = manifest.join("../..");

@@ -26,6 +26,7 @@ impl ModuleNames {
     ///
     /// `complete` follows rule L-15. A module with an `#include` that the front
     /// end cannot read has an incomplete table.
+    #[must_use]
     pub fn from_table(table: &SymbolTable, complete: bool) -> Self {
         let mut names = Self {
             complete,
@@ -80,6 +81,7 @@ impl ModuleNames {
     }
 
     /// Returns the number of names that bind to a type.
+    #[must_use]
     pub fn type_count(&self) -> usize {
         self.types.len()
     }

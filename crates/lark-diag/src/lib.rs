@@ -7,7 +7,7 @@
 //! Every diagnostic carries a stable [`Code`]. A test asserts the code, never
 //! the message text. See rule P-1 in `docs/test-strategy.md`.
 //!
-//! The catalogue in [`code`] mirrors chapter 12 of the specification. The test
+//! The [`CATALOG`] mirrors chapter 12 of the specification. The test
 //! in `tests/catalog_matches_spec.rs` checks that the two stay the same.
 
 mod code;

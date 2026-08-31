@@ -7,6 +7,7 @@ use crate::diagnostic::{Diagnostic, Diagnostics, Label};
 /// Renders one diagnostic in the format from chapter 12 of the specification.
 ///
 /// The output ends with a newline.
+#[must_use]
 pub fn render(diagnostic: &Diagnostic, map: &SourceMap) -> String {
     let file = map.file(diagnostic.primary.file);
     let position = file.line_col(diagnostic.primary.span.start);
@@ -52,6 +53,7 @@ pub fn render(diagnostic: &Diagnostic, map: &SourceMap) -> String {
 }
 
 /// Renders every diagnostic, separated by a blank line.
+#[must_use]
 pub fn render_all(diagnostics: &Diagnostics, map: &SourceMap) -> String {
     diagnostics
         .items()

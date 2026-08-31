@@ -8,13 +8,12 @@
 //! | A function with a managed value | A shadow stack frame. Rules M-10 to M-12. |
 //! | A loop | `LARK_POLL();` at the top of its body. Rule M-16. |
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::fmt::Write as _;
 
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    DECL_SPECIFIERS, FN_DEF, IDENT, NAME, NAME_REF, NEW_ARRAY_EXPR, NEW_EXPR, PATH, STRUCT_DEF,
+    TYPE_NAME, UNION_DEF,
+};
 use lark_syntax::{SyntaxNode, child_tokens};
 use lark_types::{Managed, Record};
 

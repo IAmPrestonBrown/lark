@@ -9,15 +9,15 @@
 //!
 //! Chapter 07 section 4 gives the order that a run follows.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::BTreeMap;
 
 use lark_diag::{Diagnostic, Diagnostics, LK0700, LK0701, LK0710, LK0711};
 use lark_span::{SourceId, Span};
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    BLOCK_STMT, DECL_SPECIFIERS, DECLARATION, DECLARATOR, FN_DEF, GLOBAL_ATTACH, GLOBAL_BLOCK,
+    IDENT, IFACE_DEF, IMPL_DEF, INIT_DECLARATOR, INIT_STMT, INT_NUMBER, NAME, NAME_REF,
+    NEW_ARRAY_EXPR, NEW_EXPR, POINTER,
+};
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
 /// One global block. See rule I-6.
@@ -58,6 +58,7 @@ impl Globals {
     /// Chapter 07 section 4. A numbered block runs first, lowest number first.
     /// An unnumbered block follows, in declaration order. A tie between equal
     /// numbers resolves by declaration order.
+    #[must_use]
     pub fn attached_to(&self, function: &str) -> Vec<&Block> {
         let mut numbered: Vec<(usize, &Block)> = Vec::new();
         let mut plain: Vec<(usize, &Block)> = Vec::new();
@@ -86,6 +87,7 @@ impl Globals {
 /// Reports whether a module uses managed memory.
 ///
 /// Such a module needs the runtime, so rule I-1 needs an `init` function.
+#[must_use]
 pub fn uses_managed_memory(root: &SyntaxNode) -> bool {
     root.descendants().any(|node| match node.kind() {
         NEW_EXPR | NEW_ARRAY_EXPR | GLOBAL_BLOCK | IFACE_DEF | IMPL_DEF => true,
@@ -96,6 +98,7 @@ pub fn uses_managed_memory(root: &SyntaxNode) -> bool {
 }
 
 /// Reads every global block and the `init` marker of one module.
+#[must_use]
 pub fn collect(root: &SyntaxNode) -> Globals {
     let mut found = Globals::default();
 

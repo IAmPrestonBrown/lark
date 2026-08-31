@@ -3,13 +3,12 @@
 //! Rule M-10 gives a frame only to a function that holds a managed value. Rule
 //! M-27 gives one temporary slot to each `new` expression.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::BTreeSet;
 
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    BLOCK_STMT, DECL_SPECIFIERS, DECL_STMT, DECLARATION, DECLARATOR, IDENT, INIT_DECLARATOR, NAME,
+    NAME_REF, NEW_ARRAY_EXPR, NEW_EXPR, PARAM, PARAM_LIST, PATH, POINTER,
+};
 use lark_syntax::{SyntaxNode, child_tokens};
 
 /// The name of the frame that the emitter declares.

@@ -5,7 +5,7 @@
 //! from `docs/test-strategy.md`, and rule L-13 in the specification.
 //!
 //! The parser never depends on the name resolver. It asks a
-//! [`NameOracle`](oracle::NameOracle) instead, so a language server can parse a
+//! [`NameOracle`] instead, so a language server can parse a
 //! file whose names do not resolve.
 
 pub mod kind;

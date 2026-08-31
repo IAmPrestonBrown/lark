@@ -268,6 +268,7 @@ impl SyntaxKind {
     /// Reports whether the kind is whitespace, a comment, or a preprocessor line.
     ///
     /// The parser skips trivia. The tree keeps it, so invariant R holds.
+    #[must_use]
     pub const fn is_trivia(self) -> bool {
         matches!(
             self,
@@ -284,6 +285,7 @@ impl SyntaxKind {
     /// `__restrict` maps to `restrict`. C reserves such a name to the
     /// implementation, and a header uses it so that a program that redefines
     /// the plain word still compiles. See rule C-4b.
+    #[must_use]
     pub fn c_keyword(text: &str) -> Option<Self> {
         let kind = match text {
             "auto" => Self::AUTO_KW,
@@ -336,11 +338,13 @@ impl SyntaxKind {
     }
 
     /// Returns the kind for a raw tag from the tree library.
+    #[must_use]
     pub fn from_raw(raw: u16) -> Option<Self> {
         Self::ALL.get(raw as usize).copied()
     }
 
     /// Returns the raw tag for the tree library.
+    #[must_use]
     pub fn to_raw(self) -> u16 {
         u16::try_from(self as usize).unwrap_or(0)
     }

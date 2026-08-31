@@ -8,14 +8,13 @@
 //! carries an object header. `Box<int>` costs what a plain struct costs, and
 //! `Box<gc Person*>` carries a header and a field map.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::BTreeMap;
 
 use lark_mono::{Generic, Instance};
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    DECL_SPECIFIERS, DECLARATOR, FIELD_DECL, GENERIC_PARAMS, IDENT, NAME, NAME_REF, POINTER,
+    STRUCT_BODY, STRUCT_DEF, UNION_DEF,
+};
 use lark_syntax::SyntaxNode;
 
 /// Returns the substitution map for one instantiation.

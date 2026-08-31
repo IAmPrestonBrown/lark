@@ -3,14 +3,14 @@
 //! Rule L-8 gives the two pass shape. This module is the first pass, so a
 //! program can reference any top level name from any point in the file.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::BTreeSet;
 
 use lark_span::Span;
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    DECL_SPECIFIERS, DECLARATION, DECLARATOR, ENUM_DEF, FN_DEF, GENERIC_PARAMS, GLOBAL_BLOCK,
+    IDENT, IFACE_DEF, IMPORT_DIRECTIVE, INIT_DECLARATOR, NAME, PARAM_LIST, POINTER, PP_DIRECTIVE,
+    STRUCT_DEF, TYPEDEF_KW, UNION_DEF,
+};
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
 use crate::symbol::{Symbol, SymbolKind, SymbolTable, Visibility};
@@ -62,6 +62,7 @@ fn defined_name(line: &str) -> Option<String> {
 }
 
 /// Reads every top level declaration of one module.
+#[must_use]
 pub fn collect(root: &SyntaxNode) -> Collected {
     let mut found = Collected::default();
 

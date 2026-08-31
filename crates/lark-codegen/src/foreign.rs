@@ -16,15 +16,14 @@
 //! The comma operator sequences the left operand first. The argument of the
 //! helper is the call itself, so the order is: enter, call, leave, value.
 
-// A tree walk matches on kinds constantly. Naming the enum on every arm hides
-// the shape of the walk behind noise, so this module imports the variants.
-#![allow(clippy::enum_glob_use)]
-
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 use lark_resolve::ModuleGraph;
-use lark_syntax::SyntaxKind::*;
+use lark_syntax::SyntaxKind::{
+    DECL_SPECIFIERS, DECLARATION, DECLARATOR, FN_DEF, IDENT, INIT_DECLARATOR, NAME, NAME_REF,
+    PARAM_LIST, PATH, POINTER,
+};
 use lark_syntax::{SyntaxNode, child_tokens};
 
 /// What a foreign function does to the thread that calls it.
