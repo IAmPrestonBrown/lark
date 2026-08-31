@@ -4,6 +4,7 @@ description = "The Lark lexer, the lossless syntax tree, and the parser."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
 
 [dependencies]

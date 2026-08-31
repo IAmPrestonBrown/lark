@@ -4,6 +4,7 @@ description = "The Lark type system: type representation, checking, and inferenc
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
 
 [dependencies]

@@ -99,3 +99,7 @@ Rust test, and the runtime suite against every collector under two sanitizers.
 It also checks that every numbered rule in the specification has a test, and it
 runs the benchmarks at their small size, which proves that the four collectors
 return the same answer for the same work.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

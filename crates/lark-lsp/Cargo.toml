@@ -4,6 +4,7 @@ description = "The Lark language server: completion, hover, go to definition, an
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
 
 [dependencies]

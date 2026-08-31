@@ -3,7 +3,8 @@
   "displayName": "Lark",
   "description": "Language support for Lark, a systems language that translates to C11.",
   "version": "0.1.0",
-  "license": "MIT OR Apache-2.0",
+  "license": "MIT",
+  "author": "Preston Brown",
   "publisher": "lark-lang",
   "engines": {
     "vscode": "^1.90.0"

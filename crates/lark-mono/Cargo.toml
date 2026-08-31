@@ -4,6 +4,7 @@ description = "Monomorphization: one C definition per distinct set of type argum
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
 
 [dependencies]

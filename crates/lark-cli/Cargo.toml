@@ -4,6 +4,7 @@ description = "The lark command line tool."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
 license.workspace = true
 
 [[bin]]
