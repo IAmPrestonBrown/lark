@@ -41,7 +41,7 @@ pub struct Options {
 impl Default for Options {
     fn default() -> Self {
         Self {
-            cc: "cc".to_owned(),
+            cc: "clang".to_owned(),
             std: "c11".to_owned(),
             include_dirs: Vec::new(),
             defines: Vec::new(),

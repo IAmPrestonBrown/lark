@@ -149,7 +149,7 @@ fn compile_all(
                 .map(|handle| {
                     handle.join().unwrap_or_else(|_| {
                         Err(BuildError::CompileFailed {
-                            command: "cc".to_owned(),
+                            command: "clang".to_owned(),
                             output: "a compile thread stopped".to_owned(),
                         })
                     })

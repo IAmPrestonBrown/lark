@@ -43,8 +43,10 @@ Small, known, and each one blocks nothing else.
 
 | Item | State |
 |---|---|
-| A generic return type is not mangled in the frame | Defect, found while planning |
+| Every compilation runs through clang | **Done.** Rule F-7 |
+| A generic return type is not mangled in the frame | **Done.** Decision D168 |
 | A generic interface does not parse | Gap, found while planning |
+| `auto` infers nothing from a call, a name, or a field | Gap, found while fixing the above. Moved to E2. |
 | Generational collector is slowest on three of five benchmarks | Tuning |
 | `lark-driver` tests write into the crate directory | Untidy |
 | `lark fmt` never ran on the project sources | 50 of 61 files differ |
@@ -196,6 +198,29 @@ export int lark_version(void) { }     // links as lark_version
 A migration note goes in the specification, because this breaks any C caller
 that links against a Lark export today.
 
+### Inference from a name and a call
+
+`auto` reads a literal, a cast, a `new`, and an operator. It reads nothing from
+a name, a call, a field, or a method.
+
+```c
+auto a = plain();      // no type, emitted as `auto` and rejected by C
+auto b = other;        // the same
+auto c = value.field;  // the same
+```
+
+Every one of these needs a name to type environment, which the type crate does
+not carry. The resolver builds one for namespaces in this same phase, so the
+two land together.
+
+| Rule | Statement |
+|---|---|
+| T-12 | `auto` reads the type of a call from the signature of the function it names. |
+| T-13 | `auto` reads the type of a name from its declaration, and of a field from its record. |
+
+Collections make this urgent. `auto v = Vector::with_capacity(8);` is the shape
+a standard library uses everywhere.
+
 ### Generic interfaces
 
 `iface Seq<T>` does not parse. Collections need it.
@@ -253,17 +278,20 @@ owns both sides.
 
 ### The compiler
 
-The driver builds GCC style flags: `-std=`, `-Wall`, `-iquote`, `-O`, `-g`,
-`-pthread`. MSVC accepts none of them.
+**Settled in E1.** Every compilation runs through clang, on every platform.
+Rule F-7 states it. One compiler means one flag dialect, so the Windows port
+needs no second set of flags and no profile field.
 
-**Recommendation:** support clang on Windows first. The flag builder then stays
-as it is, and `cl` support becomes a later flag profile rather than a rewrite.
-`build.cc` already selects the compiler, so a profile field joins it.
+`build.cc` still names another compiler for a project that needs one. A
+compiler that rejects the flags is the caller's problem, and the build reports
+what it ran.
+
+The runtime suite runs a second time under gcc on Linux, because gcc reported a
+frame overrun that clang accepted. See decision D164.
 
 | Rule | Statement |
 |---|---|
 | R-9 | The runtime names every platform primitive through one seam. A collector calls the seam, never the platform. |
-| F-6 | `build.toolchain` selects a flag profile: `gnu` or `msvc`. The default follows the compiler that `build.cc` names. |
 
 ### Continuous integration
 

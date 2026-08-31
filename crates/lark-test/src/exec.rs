@@ -58,7 +58,7 @@ impl From<std::io::Error> for ExecError {
 /// The environment variable `LARK_CC` wins. The default is `cc`.
 #[must_use]
 pub fn c_compiler() -> String {
-    std::env::var("LARK_CC").unwrap_or_else(|_| "cc".to_owned())
+    std::env::var("LARK_CC").unwrap_or_else(|_| "clang".to_owned())
 }
 
 /// Writes every emitted file to a directory, builds them, and runs the binary.

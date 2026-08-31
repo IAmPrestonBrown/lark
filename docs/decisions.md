@@ -1567,3 +1567,38 @@ the address of a local. The top then sits on the heap while the base sits on
 the real stack, so the scan walks the unmapped memory between them and the
 program stops with a fault. The runtime tests therefore run with that one
 option off. Every other check the sanitizer makes stays on.
+
+## D168 - Every compilation runs through clang
+**Status:** settled.
+**Reason:** The driver builds GCC style flags, and MSVC accepts none of them.
+A Windows port therefore needed either a second flag dialect or a compiler that
+takes the first one. One compiler on every platform is the smaller answer, and
+it makes a build behave the same everywhere.
+**Method:** Rule F-7. `build.cc` defaults to `clang`. A project that needs
+another compiler names it, and the build reports what it ran.
+
+The runtime suite runs a second time under gcc on Linux. Gcc reported the frame
+overrun in decision D164 that clang accepted, so the diversity is worth one
+extra job. On macOS `gcc` is clang, so that pass is Linux only.
+
+## D169 - A generic return type reaches the frame
+**Status:** settled.
+**Reason:** `gc Vec<int>* make(void)` emitted the right signature and the wrong
+temporary. `frame::return_type_of` read the name and dropped the argument list,
+so the type read as `Vec*`, which names no C type. Decision D144 sent the
+declaration and the `auto` paths through `lark_mono::resolve` and missed this
+one.
+**Method:** Rule G-1 and rule M-12. `return_type_of` keeps the argument list,
+and `write_function` resolves the text the same way every other path does. A
+qualified name keeps only its last segment, per rule X-5.
+
+## D170 - `auto` reads nothing from a name or a call
+**Status:** open. Planned for phase E2.
+**Reason:** Inference covers a literal, a cast, a `new`, and an operator. A
+call, a name, a field, and a method all fall to the error type. A declaration
+written as `auto a = f()` therefore emits `auto`, and the C compiler rejects
+it. This is not a regression. It never worked.
+**Method:** Rules T-12 and T-13 need a name to type environment, which
+`lark-types` does not carry. The resolver builds one for namespaces in the same
+phase, so the two land together. A standard library needs it, because
+`auto v = Vector::with_capacity(8)` is the shape collections use everywhere.

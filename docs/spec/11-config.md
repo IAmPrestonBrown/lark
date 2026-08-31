@@ -11,7 +11,7 @@ name    = "myapp"
 version = "0.1.0"
 
 [build]
-cc     = "cc"
+cc     = "clang"
 std    = "c11"
 out    = "build/"
 emit_c = true          # keep the generated C on disk
@@ -34,7 +34,7 @@ search = ["./lib", "../shared"]
 |---|---|---|---|
 | `package.name` | string | required | The package name |
 | `package.version` | string | `"0.0.0"` | The package version |
-| `build.cc` | string | `"cc"` | The C compiler for `-E` and for the final build |
+| `build.cc` | string | `"clang"` | The C compiler for `-E` and for the final build. See rule F-7 |
 | `build.std` | string | `"c11"` | The C standard for the output |
 | `build.out` | string | `"build/"` | The output directory |
 | `build.emit_c` | bool | `true` | Keep the generated C |
@@ -68,6 +68,14 @@ poll, and a missing barrier.
 
 **Rule F-4.** The environment variable `LARK_GC_TORTURE=1` turns on torture mode
 for a binary that the build did not configure for it.
+
+**Rule F-7.** The default compiler is `clang` on every platform. One compiler
+means one flag dialect, so a build behaves the same everywhere and a port to a
+new platform needs no second set of flags.
+
+`build.cc` names another compiler. A compiler that does not accept the flags
+that rule F-5 and the warning set produce is the caller's problem, and the
+build reports what it ran.
 
 **Rule F-5.** `build.opt` becomes `-O<value>` on every compile, so the C
 compiler decides what each level means. The default is `"0"`, which matches the

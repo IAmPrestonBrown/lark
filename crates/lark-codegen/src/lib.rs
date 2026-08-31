@@ -1027,6 +1027,10 @@ impl Emitter<'_> {
     /// Writes a function definition, with its shadow stack frame.
     fn write_function(&mut self, item: &SyntaxNode) {
         let mut plan = frame::plan(item, &self.interface_names());
+        // Rule G-1. A function that returns a generic instantiation needs the
+        // instantiation name in the temporary that rule M-12 declares, the
+        // same way a declaration and an `auto` do.
+        plan.return_type = lark_mono::resolve(self.program, &plan.return_type);
         let is_init = managed_emit::is_init_function(item);
 
         // Rule M-10 with rule M-18. A managed parameter needs a slot only when

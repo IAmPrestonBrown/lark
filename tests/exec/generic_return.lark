@@ -1,0 +1,50 @@
+// A function that returns a generic instantiation.
+//
+// The signature mangled correctly, and the temporary that rule M-12 declares
+// did not, so the emitted C named a type that no C compiler knows.
+// covers: G-1, M-12, T-1b, X-5
+
+@import stdio
+
+managed struct Vec<T> {
+    gc T* data;
+    int len;
+}
+
+managed struct Pair<A, B> {
+    A first;
+    B second;
+}
+
+// A managed return type. Rule T-1b puts the `gc` on what the function returns.
+gc Vec<int>* make(int n) {
+    gc int* items = new int[n];
+    for (int index = 0; index < n; index++) {
+        items[index] = index * index;
+    }
+    return new Vec<int> { .data = items, .len = n };
+}
+
+// A second instantiation of the same generic, so the two names differ.
+gc Vec<char>* make_bytes(void) {
+    gc char* items = new char[4];
+    items[0] = 'a';
+    return new Vec<char> { .data = items, .len = 4 };
+}
+
+// Two parameters, so the mangle covers a list rather than one argument.
+gc Pair<int, char>* pair(void) {
+    return new Pair<int, char> { .first = 11, .second = 'z' };
+}
+
+init int main(void) {
+    gc Vec<int>* squares = make(5);
+    gc Vec<char>* bytes = make_bytes();
+    gc Pair<int, char>* both = pair();
+
+    stdio::printf("squares %d %d %d\n", squares->data[2], squares->data[4],
+                  squares->len);
+    stdio::printf("bytes %c %d\n", bytes->data[0], bytes->len);
+    stdio::printf("pair %d %c\n", both->first, both->second);
+    return 0;
+}

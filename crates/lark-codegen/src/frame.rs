@@ -6,8 +6,8 @@
 use std::collections::BTreeSet;
 
 use lark_syntax::SyntaxKind::{
-    BLOCK_STMT, DECL_SPECIFIERS, DECL_STMT, DECLARATION, DECLARATOR, IDENT, INIT_DECLARATOR, NAME,
-    NAME_REF, NEW_ARRAY_EXPR, NEW_EXPR, PARAM, PARAM_LIST, PATH, POINTER,
+    BLOCK_STMT, DECL_SPECIFIERS, DECL_STMT, DECLARATION, DECLARATOR, GENERIC_ARGS, IDENT,
+    INIT_DECLARATOR, NAME, NAME_REF, NEW_ARRAY_EXPR, NEW_EXPR, PARAM, PARAM_LIST, PATH, POINTER,
 };
 use lark_syntax::{SyntaxNode, child_tokens};
 
@@ -232,13 +232,40 @@ fn return_type_of(item: &SyntaxNode) -> String {
             out.push_str(token.text());
         }
         for child in specifiers.children() {
-            if matches!(child.kind(), NAME_REF | PATH) {
-                if !out.is_empty() {
-                    out.push(' ');
+            match child.kind() {
+                NAME_REF => {
+                    if !out.is_empty() {
+                        out.push(' ');
+                    }
+                    if let Some(token) = child.first_token() {
+                        out.push_str(token.text());
+                    }
                 }
-                if let Some(token) = child.first_token() {
-                    out.push_str(token.text());
+                // Rule X-5. `mod::Name` keeps only the name in the emitted C.
+                PATH => {
+                    if !out.is_empty() {
+                        out.push(' ');
+                    }
+                    if let Some(token) = child_tokens(&child)
+                        .filter(|token| token.kind() == IDENT)
+                        .last()
+                    {
+                        out.push_str(token.text());
+                    }
                 }
+                // Rule G-1. The arguments decide which instantiation this
+                // names, so the caller can mangle it. Without them the type
+                // reads as the generic, which has no C form.
+                GENERIC_ARGS => {
+                    for token in child.descendants_with_tokens() {
+                        if let Some(token) = token.into_token()
+                            && !token.kind().is_trivia()
+                        {
+                            out.push_str(token.text());
+                        }
+                    }
+                }
+                _ => {}
             }
         }
     }

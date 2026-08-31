@@ -62,6 +62,10 @@ impl Default for Package {
 #[serde(default, deny_unknown_fields)]
 pub struct Build {
     /// The C compiler that the build calls.
+    ///
+    /// Rule F-7. The default is `clang` on every platform. One compiler means
+    /// one flag dialect, so a build behaves the same everywhere and the
+    /// Windows port needs no second set of flags.
     pub cc: String,
     /// The C standard that the output targets.
     pub std: String,
@@ -97,7 +101,7 @@ pub struct Build {
 impl Default for Build {
     fn default() -> Self {
         Self {
-            cc: "cc".to_owned(),
+            cc: "clang".to_owned(),
             std: "c11".to_owned(),
             out: PathBuf::from("build/"),
             emit_c: true,
@@ -485,7 +489,7 @@ mod tests {
         let text = config.record();
         for expected in [
             "name = \"demo\"",
-            "cc = \"cc\"",
+            "cc = \"clang\"",
             "std = \"c11\"",
             "strategy = \"semispace\"",
             "roots = \"shadow-stack\"",
@@ -532,7 +536,7 @@ mod tests {
     #[test]
     fn a_missing_file_yields_the_defaults() {
         let config = Config::default();
-        assert_eq!(config.build.cc, "cc");
+        assert_eq!(config.build.cc, "clang");
         assert_eq!(config.build.std, "c11");
         assert_eq!(config.gc.strategy, "precise-marksweep");
         assert_eq!(config.gc.roots, "shadow-stack");
@@ -550,6 +554,23 @@ mod tests {
         assert!(config.gc.torture);
         // A field that the file leaves out keeps its default.
         assert_eq!(config.build.std, "c11");
+    }
+
+    /// covers: F-7
+    #[test]
+    fn the_default_compiler_is_clang() {
+        let Ok(config) = Config::parse("") else {
+            panic!("an empty file must parse");
+        };
+        assert_eq!(config.build.cc, "clang");
+        // Rule F-2 records it, so a reader knows what produced the output.
+        assert!(config.record().contains("cc = \"clang\""));
+
+        // A project that needs another compiler names it.
+        let Ok(config) = Config::parse("[build]\ncc = \"gcc\"\n") else {
+            panic!("the fixture must parse");
+        };
+        assert_eq!(config.build.cc, "gcc");
     }
 
     /// covers: F-5

@@ -7,7 +7,10 @@
 # it. The `check-asan` target probes first, with a time limit. Set
 # LARK_REQUIRE_ASAN=1 to fail rather than skip. Continuous integration sets it.
 
-CC ?= cc
+# The product compiles through clang, so the runtime suite does too. CI runs
+# this suite a second time with gcc, because gcc reported a frame overrun that
+# clang accepted. See decision D164.
+CC ?= clang
 BUILD ?= build
 LIMIT ?= 120
 RUN = tools/run-with-limit.sh
