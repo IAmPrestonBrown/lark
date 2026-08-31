@@ -66,12 +66,26 @@ pull request text, issue text, and configuration.
 Write commit messages as the author of the change. Add no `Co-Authored-By`
 trailer for a tool. Add no session link. Add no generation notice.
 
+Keep per-machine tool configuration out of the repository. A file that one
+tool reads belongs in `.git/info/exclude`, which git never commits. It does
+not belong in `.gitignore`, because that file is tracked and naming the tool
+there breaks this rule.
+
 **Exception.** This document and `AGENTS.md` state the rule, so they name the
-subject. Both list themselves in `.attribution-exempt`. No other file gets an
-entry.
+subject. Both list themselves in `.attribution-exempt`. The two files that
+carry the word list, `scripts/check-attribution.sh` and
+`.githooks/commit-msg`, name it because the check cannot work otherwise. No
+other file gets an entry.
 
 **Check.** `scripts/check-attribution.sh` greps a word list over every tracked
 file and over the commit range.
+
+`.githooks/commit-msg` runs the same word list over one message, before the
+commit exists. Enable it once per clone.
+
+```sh
+git config core.hooksPath .githooks
+```
 
 ### C-1.4 Comments explain why
 A comment states the reason for the code, or the invariant the code holds. A

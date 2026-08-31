@@ -82,6 +82,12 @@ a diagnostic and a decision both point at the same line.
 
 Read [docs/conventions.md](docs/conventions.md) before you write anything.
 
+Turn on the repository hooks once per clone.
+
+```sh
+git config core.hooksPath .githooks
+```
+
 Run the gate before every push.
 
 ```sh

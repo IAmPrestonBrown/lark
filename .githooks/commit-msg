@@ -1,0 +1,21 @@
+#!/bin/sh
+# Rule C-1.3: a commit message names no AI assistant and no language model.
+#
+# The gate checks the last 200 messages, which finds the problem after the
+# commit exists. This hook finds it before, when a rewrite is still cheap.
+#
+# Enable it once per clone:
+#     git config core.hooksPath .githooks
+set -eu
+
+pattern='claude|anthropic|chatgpt|openai|gpt-[0-9]|copilot|gemini|llama|\
+co-authored-by:.*(ai|bot)|generated with|written by an ai|large language model|\
+\bllm\b'
+pattern=$(printf '%s' "$pattern" | tr -d '\\\n')
+
+# A comment line never reaches the stored message.
+if grep -v '^#' "$1" | LC_ALL=C grep -qiE "$pattern"; then
+    echo "commit-msg: the message names a tool. See rule C-1.3." >&2
+    grep -v '^#' "$1" | LC_ALL=C grep -niE "$pattern" | sed 's/^/    /' >&2
+    exit 1
+fi

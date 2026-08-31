@@ -11,8 +11,10 @@ pattern=$(printf '%s' "$pattern" | tr -d '\\\n')
 
 fail=0
 for f in $(sh scripts/lib-files.sh); do
+    # A file that carries the word list must name the words. Both files that
+    # do are exempt, and no other file gets an entry here.
     case "$f" in
-        CLAUDE.md|scripts/check-attribution.sh) continue ;;
+        scripts/check-attribution.sh|.githooks/commit-msg) continue ;;
     esac
     # A file that states the rule itself is exempt. See .attribution-exempt.
     if [ -f .attribution-exempt ] && grep -qxF "$f" .attribution-exempt; then
