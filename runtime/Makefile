@@ -28,6 +28,14 @@ CFLAGS = -std=c11 $(WARNINGS) -Iinclude -Icore -pthread -g
 UBSAN = -fsanitize=undefined -fno-sanitize-recover=undefined
 ASAN = -fsanitize=address -fno-omit-frame-pointer
 
+# A conservative scan reads the machine stack between two addresses. Rule M-13
+# takes the top from the address of a local, and `detect_stack_use_after_return`
+# puts that local on a heap fake stack instead. The two bounds then name
+# different regions, and the scan walks unmapped memory between them. The
+# option is off for these runs, and every other check the sanitizer makes stays
+# on.
+ASAN_ENV = ASAN_OPTIONS=detect_stack_use_after_return=0
+
 SOURCES = core/lark_core.c $(GC_SOURCE)
 TESTS = tests/lark_test.c tests/main.c tests/test_alloc.c tests/test_blockmap.c \
         tests/test_barrier.c tests/test_collect.c tests/test_contract.c tests/test_graphs.c \
@@ -73,9 +81,9 @@ check-ubsan: $(SOURCES) $(TESTS) $(HEADERS) | $(BUILD)
 check-asan: $(SOURCES) $(TESTS) $(HEADERS) | $(BUILD)
 	@echo "== runtime tests, $(GC), AddressSanitizer =="
 	@$(CC) $(CFLAGS) $(ASAN) -o $(BUILD)/asan-probe tests/asan_probe.c 2>/dev/null; \
-	if $(RUN) 10 $(BUILD)/asan-probe >/dev/null 2>&1; then \
+	if $(ASAN_ENV) $(RUN) 10 $(BUILD)/asan-probe >/dev/null 2>&1; then \
 	    $(CC) $(CFLAGS) $(ASAN) -Itests -o $(BUILD)/tests-asan $(SOURCES) $(TESTS) && \
-	    $(RUN) $(LIMIT) $(BUILD)/tests-asan; \
+	    $(ASAN_ENV) $(RUN) $(LIMIT) $(BUILD)/tests-asan; \
 	elif [ "$(LARK_REQUIRE_ASAN)" = "1" ]; then \
 	    echo "FAIL  AddressSanitizer does not run here, and LARK_REQUIRE_ASAN is set."; \
 	    exit 1; \

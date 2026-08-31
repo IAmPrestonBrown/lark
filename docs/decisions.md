@@ -1560,3 +1560,10 @@ so the first run in continuous integration was the first run at all.
 Every other function in the runtime keeps its instrumentation, so a real fault
 still fails the build. The macro reads `__has_feature` for clang and
 `__SANITIZE_ADDRESS__` for gcc, and it expands to nothing elsewhere.
+
+The attribute stops the report and not the crash. `detect_stack_use_after_return`
+puts a local on a heap fake stack, and rule M-13 takes the top of the scan from
+the address of a local. The top then sits on the heap while the base sits on
+the real stack, so the scan walks the unmapped memory between them and the
+program stops with a fault. The runtime tests therefore run with that one
+option off. Every other check the sanitizer makes stays on.
