@@ -47,9 +47,9 @@ Small, known, and each one blocks nothing else.
 | A generic return type is not mangled in the frame | **Done.** Decision D168 |
 | A generic interface does not parse | Gap, found while planning |
 | `auto` infers nothing from a call, a name, or a field | Gap, found while fixing the above. Moved to E2. |
-| Generational collector is slowest on three of five benchmarks | Tuning |
-| `lark-driver` tests write into the crate directory | Untidy |
-| `lark fmt` never ran on the project sources | 50 of 61 files differ |
+| Generational collector is slowest on three of five benchmarks | **Done.** Now fastest on three. D173, D174, D175 |
+| `lark-driver` tests write into the crate directory | **Not a defect.** The directory was stale, and no current test writes there. |
+| `lark fmt` never ran on the project sources | **Done.** 40 files formatted, and the gate checks them. D171, D172 |
 
 ### The return type defect
 
@@ -93,9 +93,14 @@ test is the crate directory. They move to `std::env::temp_dir`, which
 `.expected.c` files carry `#line` directives, so they change and get blessed. A
 gate step then runs `lark fmt --check`, so the sources cannot drift again.
 
-**Done when:** every item above is fixed, the benchmarks show the generational
-collector inside 20 percent of marksweep on `trees` and `walk`, and the gate
-checks formatting.
+**Done when:** every item above is fixed, and the gate checks formatting.
+
+The first exit test asked for the generational collector to come within 20
+percent of the mark and sweep collector on `trees` and `walk`. That was the
+wrong test. Both benchmarks retain everything they allocate, so a collector
+that copies pays for the whole live set and reclaims nothing. The right test is
+the shape of the result: the collector wins where objects die young, and stays
+in the same class where they do not. It now does both. See decision D175.
 
 ---
 

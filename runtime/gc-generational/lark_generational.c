@@ -28,7 +28,13 @@
 #include "lark_rt.h"
 
 /* The bytes that the nursery holds. A minor collection walks this much. */
-#define NURSERY_BYTES ((size_t)256u * 1024u)
+/* The smallest nursery.
+ *
+ * A minor collection costs what survives, and a nursery fills at the rate the
+ * program allocates. A small nursery therefore collects often and gains little
+ * each time. At 256 kilobytes the `overhead` benchmark ran 1375 collections
+ * and took 404 milliseconds. At this size it runs 30 and takes 111. */
+#define NURSERY_BYTES ((size_t)8u * 1024u * 1024u)
 
 /* The largest nursery that the collector grows to on its own. */
 #define NURSERY_MAX ((size_t)16u * 1024u * 1024u)
@@ -70,6 +76,16 @@ static space old_reserve;
 /* One byte per card of the old generation. A store marks its card. */
 static uint8_t *cards;
 static size_t card_count;
+
+/* Where the first object of each card starts, or NO_START when none does.
+ *
+ * A card is 512 bytes and an object can span several, so a dirty card does not
+ * say where to begin reading. This map does. Without it the scan walked every
+ * object of the old generation on every minor collection, whatever the number
+ * of dirty cards, which made a collection cost the size of the heap rather
+ * than the size of the change. */
+#define NO_START ((size_t)-1)
+static size_t *card_start;
 
 static lark_gc_stats stats;
 static size_t minor_collections;
@@ -146,8 +162,17 @@ static void *evacuate(void *payload) {
     }
 
     uint8_t *block = destination->memory + destination->used;
+    size_t placed = destination->used;
     destination->used += need;
     memcpy(block, header, sizeof(lark_header) + bytes);
+
+    /* The copy lands in the old generation, so the crossing map records where
+     * its card begins reading. A later card that this object spans keeps
+     * NO_START, and the scan walks back to find it. */
+    size_t card = placed / CARD_BYTES;
+    if (card < card_count && card_start[card] == NO_START) {
+        card_start[card] = placed;
+    }
 
     void *moved = block + sizeof(lark_header);
     header->type = &FORWARDED;
@@ -200,32 +225,53 @@ static void scan_destination(size_t from) {
  * the card covers, because a card is a range of bytes rather than a list of
  * fields. That is the trade the card table makes: one byte per card, and a
  * short walk when it is marked. */
-static void scan_marked_cards(void) {
-    size_t offset = 0u;
-    size_t index = 0u;
-    while (offset < old.used) {
-        uint8_t *block = old.memory + offset;
-        lark_header *header = (lark_header *)(void *)block;
-        size_t step = round_up(
-            sizeof(lark_header) + header->type->size * header->count, BASE_ALIGN);
-
-        size_t first = offset / CARD_BYTES;
-        size_t last = (offset + step - 1u) / CARD_BYTES;
-        bool marked = false;
-        for (size_t card = first; card <= last && card < card_count; card += 1u) {
-            if (cards[card] != 0u) {
-                marked = true;
-                break;
-            }
+/* Returns where to start reading for a card.
+ *
+ * An object that spans several cards starts in an earlier one, so a card with
+ * no start of its own reads from the nearest card that has one. */
+static size_t start_for_card(size_t card) {
+    for (size_t index = card + 1u; index > 0u; index -= 1u) {
+        if (card_start[index - 1u] != NO_START) {
+            return card_start[index - 1u];
         }
-        if (marked) {
-            scan_object(header, block + sizeof(lark_header));
-        }
-
-        offset += step;
-        index += 1u;
     }
-    (void)index;
+    return 0u;
+}
+
+static void scan_marked_cards(void) {
+    size_t card = 0u;
+    while (card < card_count) {
+        if (cards[card] == 0u) {
+            card += 1u;
+            continue;
+        }
+
+        /* One pass covers a run of dirty cards, so an object that spans the
+         * run is read once rather than once per card. */
+        size_t last = card;
+        while (last + 1u < card_count && cards[last + 1u] != 0u) {
+            last += 1u;
+        }
+        size_t low = card * CARD_BYTES;
+        size_t high = (last + 1u) * CARD_BYTES;
+        if (high > old.used) {
+            high = old.used;
+        }
+
+        size_t offset = start_for_card(card);
+        while (offset < high) {
+            uint8_t *block = old.memory + offset;
+            lark_header *header = (lark_header *)(void *)block;
+            size_t step = round_up(
+                sizeof(lark_header) + header->type->size * header->count, BASE_ALIGN);
+            /* An object that ends before the run began holds no dirty field. */
+            if (offset + step > low) {
+                scan_object(header, block + sizeof(lark_header));
+            }
+            offset += step;
+        }
+        card = last + 1u;
+    }
 }
 
 /* -- The collector interface --------------------------------------------- */
@@ -252,9 +298,13 @@ static void generational_init(const lark_gc_config *value) {
 
     card_count = old_bytes / CARD_BYTES;
     cards = calloc(card_count, 1);
-    if (cards == NULL) {
+    card_start = calloc(card_count, sizeof *card_start);
+    if (cards == NULL || card_start == NULL) {
         fputs("lark: cannot reserve the card table\n", stderr);
         exit(2);
+    }
+    for (size_t index = 0; index < card_count; index += 1u) {
+        card_start[index] = NO_START;
     }
     stats.heap_bytes = nursery.bytes + old.bytes + old_reserve.bytes;
 }
@@ -264,7 +314,9 @@ static void generational_shutdown(void) {
     space_close(&old);
     space_close(&old_reserve);
     free(cards);
+    free(card_start);
     cards = NULL;
+    card_start = NULL;
     card_count = 0u;
     memset(&stats, 0, sizeof stats);
     minor_collections = 0u;
@@ -303,11 +355,21 @@ static bool cards_resize(size_t old_bytes) {
         return true;
     }
     uint8_t *grown = calloc(wanted, 1);
-    if (grown == NULL) {
+    size_t *starts = calloc(wanted, sizeof *starts);
+    if (grown == NULL || starts == NULL) {
+        free(grown);
+        free(starts);
         return false;
     }
+    /* A major collection follows every growth and rebuilds the map, so the old
+     * entries carry nothing worth keeping. */
+    for (size_t index = 0; index < wanted; index += 1u) {
+        starts[index] = NO_START;
+    }
     free(cards);
+    free(card_start);
     cards = grown;
+    card_start = starts;
     card_count = wanted;
     return true;
 }
@@ -367,10 +429,15 @@ static void run_collection(bool full) {
     size_t scan_from;
 
     if (full) {
-        /* A major collection copies the whole live set into the reserve. */
+        /* A major collection copies the whole live set into the reserve, so
+         * every object lands at a new offset and the crossing map starts
+         * empty. A minor collection appends, so its map carries forward. */
         old_reserve.used = 0u;
         destination = &old_reserve;
         scan_from = 0u;
+        for (size_t index = 0; index < card_count; index += 1u) {
+            card_start[index] = NO_START;
+        }
     } else {
         /* A minor collection promotes into the old generation, after what it
          * already holds. */
@@ -471,7 +538,12 @@ static void *generational_alloc(const lark_typeinfo *type, size_t count) {
             return NULL;
         }
         uint8_t *block = old.memory + old.used;
+        size_t placed = old.used;
         old.used += need;
+        size_t card = placed / CARD_BYTES;
+        if (card < card_count && card_start[card] == NO_START) {
+            card_start[card] = placed;
+        }
         lark_header *header = (lark_header *)(void *)block;
         header->type = type;
         header->count = count;

@@ -1630,3 +1630,56 @@ points at, and twenty tests failed.
 **Method:** `scripts/lark-sources.sh` lists the 40 files the formatter owns and
 excludes the 22 it does not. The gate runs `lark fmt --check` over that list,
 so the sources cannot drift.
+
+## D173 - A card scan reads dirty cards, not every object
+**Status:** settled.
+**Reason:** `scan_marked_cards` walked every object of the old generation on
+every minor collection, and tested each one against its cards. The cost
+followed the size of the heap rather than the size of the change.
+**Method:** A crossing map records where the first object of each card starts.
+The scan walks the card table, joins a run of dirty cards, and reads only the
+objects that the run covers. An object that spans several cards starts in an
+earlier one, so a card with no start of its own reads from the nearest card
+that has one.
+
+The map is rebuilt by a major collection, which moves every object, and it
+carries forward through a minor one, which appends.
+
+Measured over three runs each, this took `trees` from 214 to 191 milliseconds,
+`walk` from 226 to 207, and `overhead` from 495 to 403. A single run showed
+nothing, because the difference sits inside the noise of one measurement.
+
+## D174 - The nursery floor is eight megabytes
+**Status:** settled.
+**Reason:** The floor was 256 kilobytes. A minor collection costs what
+survives, and a nursery fills at the rate the program allocates, so a small
+nursery collects often and gains little each time. The `overhead` benchmark ran
+1375 collections.
+**Method:** The floor is eight megabytes. `overhead` now runs 30 collections.
+The heap grows to about twice what the mark and sweep collector holds, which is
+what a collector that copies needs anyway.
+
+| Floor | overhead | collections |
+|---|---|---|
+| 256 KB | 404 ms | 1375 |
+| 1 MB | 198 ms | 270 |
+| 4 MB | 151 ms | 61 |
+| 8 MB | 111 ms | 30 |
+| 16 MB | 105 ms | 15 |
+
+Sixteen megabytes reads faster and holds twice the memory, so eight is the
+balance.
+
+## D175 - The generational collector loses on a live set that never dies
+**Status:** settled.
+**Reason:** After D173 and D174 the collector is the fastest of the four on
+`churn`, `barrier`, and `overhead`, and it beats `malloc` and `free` on the
+last of those. It stays behind the mark and sweep collector on `trees` and
+`walk` by about 30 percent.
+
+That is the shape the design gives, not a defect. Both of those benchmarks
+retain everything they allocate, so every collection copies the whole live set
+and reclaims nothing. A collector that copies pays for what survives, and a
+collector that marks and sweeps pays for what dies.
+**Method:** No change. The benchmark table states the trade, and
+`docs/guide/08-tools.md` says which collector suits which shape of program.
