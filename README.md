@@ -74,6 +74,7 @@ own file names, links, and prints what the same library built by `cc` prints.
 | [docs/test-strategy.md](docs/test-strategy.md) | How the project tests itself |
 | [docs/build-plan.md](docs/build-plan.md) | The workspace layout and the phases |
 | [docs/toolchain-plan.md](docs/toolchain-plan.md) | The tools around the language |
+| [docs/expansion-plan.md](docs/expansion-plan.md) | What comes next, and in what order |
 | [docs/grammar/lark.ebnf](docs/grammar/lark.ebnf) | The grammar, as a delta over ISO C11 |
 | [examples/tour.lark](examples/tour.lark) | Every construct in one file |
 | [benchmarks/](benchmarks/) | What each collector costs, and what `gc` costs against C |
