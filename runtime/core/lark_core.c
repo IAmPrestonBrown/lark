@@ -388,8 +388,31 @@ void lark_root_remove(void **slots) {
     pthread_mutex_unlock(&world_lock);
 }
 
+/* Turns off AddressSanitizer for one function.
+ *
+ * The sanitizer checks every load against the object that owns the address.
+ * Rule M-13 makes the conservative scan read the machine stack word by word,
+ * across every object on it and across the padding between them, so the two
+ * disagree by design. Clang reports a stack buffer underflow and gcc reports a
+ * stack use after return, and both describe the same intended read.
+ *
+ * The attribute covers the scan alone. Every other function in the runtime
+ * keeps its instrumentation, so a real fault still fails the build. */
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define LARK_NO_ASAN __attribute__((no_sanitize_address))
+#endif
+#endif
+#if !defined(LARK_NO_ASAN) && defined(__SANITIZE_ADDRESS__)
+#define LARK_NO_ASAN __attribute__((no_sanitize_address))
+#endif
+#ifndef LARK_NO_ASAN
+#define LARK_NO_ASAN
+#endif
+
 /* Scans a range of machine words and reports each as a candidate root. */
-static void scan_words(void *low, void *high, lark_root_visit visit, void *ctx) {
+LARK_NO_ASAN static void scan_words(void *low, void *high, lark_root_visit visit,
+                                    void *ctx) {
     if (low == NULL || high == NULL || low >= high) {
         return;
     }

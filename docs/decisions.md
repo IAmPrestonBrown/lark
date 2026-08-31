@@ -1545,3 +1545,18 @@ version. `cargo deny` reads that as a wildcard, and `deny.toml` denies
 wildcards, so the audit failed on the first push.
 **Method:** Each entry gives both. A registry needs the version as well, so a
 crate that publishes later needs no further change.
+
+## D167 - The conservative scan opts out of AddressSanitizer
+**Status:** settled.
+**Reason:** The sanitizer checks every load against the object that owns the
+address. Rule M-13 makes `scan_words` read the machine stack word by word,
+across every object and across the padding between them, so the two disagree
+by design. Clang reported a stack buffer underflow and gcc reported a stack use
+after return, and both described the same intended read.
+
+The gate skips the sanitizer on a machine that cannot map its shadow memory,
+so the first run in continuous integration was the first run at all.
+**Method:** `__attribute__((no_sanitize_address))` on `scan_words` alone.
+Every other function in the runtime keeps its instrumentation, so a real fault
+still fails the build. The macro reads `__has_feature` for clang and
+`__SANITIZE_ADDRESS__` for gcc, and it expands to nothing elsewhere.
