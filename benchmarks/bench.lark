@@ -4,6 +4,11 @@
 // several runs. The row names the collector, so a reader can tell two runs
 // apart without tracking the order.
 
+// `clock_gettime` comes from POSIX, not from C11. With `-std=c11` a strict
+// library hides it, so the macro asks for it. It must come before every
+// include.
+#define _POSIX_C_SOURCE 199309L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

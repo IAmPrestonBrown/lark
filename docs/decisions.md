@@ -1509,3 +1509,39 @@ is always present.
 **Method:** Rule C-7.2. The release workflow unpacks each archive outside the
 source tree and builds a managed program with it. The four targets each build
 on their own machine, so no build cross compiles.
+
+## D164 - A nested allocation takes one temporary slot, not one per level
+**Status:** settled.
+**Reason:** `hoist_nested_allocations` collected every nested `new` in one
+list, then recursed into each one. The recursion hoisted the deeper entries,
+but the list already held them, so the loop hoisted each a second time. Four
+allocations took seven slots in a frame sized for four, which wrote 24 bytes
+past the array and into the stack canary. The emitted C also allocated three
+objects that nothing read.
+
+Clang did not report it and the program printed the right answer. The first
+run on Linux reported `stack smashing detected` under every collector.
+**Method:** Rule M-27 and rule M-28a. The loop checks the map again for each
+child, because the recursion fills it while the loop runs.
+
+Every fixture now compiles with `-fstack-protector-strong`, so the same class
+of defect fails on every platform rather than on one. Reverting the fix makes
+`gc/nested_new` fail on macOS as well.
+
+## D165 - A POSIX function needs its feature macro
+**Status:** settled.
+**Reason:** `runtime/tests/test_contract.c` called `setenv` and `unsetenv`
+with no feature macro. Apple libc declares them anyway. Glibc hides them under
+`-std=c11`, so the first run on Linux failed with an implicit declaration and
+`-Werror` stopped the build.
+**Method:** `#define _POSIX_C_SOURCE 200809L` before every include.
+`benchmarks/bench.lark` takes the same treatment for `clock_gettime`, which
+worked on both platforms but rested on the same accident.
+
+## D166 - A path dependency carries a version
+**Status:** settled.
+**Reason:** Every entry in `[workspace.dependencies]` gave a path and no
+version. `cargo deny` reads that as a wildcard, and `deny.toml` denies
+wildcards, so the audit failed on the first push.
+**Method:** Each entry gives both. A registry needs the version as well, so a
+crate that publishes later needs no further change.

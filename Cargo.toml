@@ -10,19 +10,19 @@ authors = ["Preston Brown"]
 license = "MIT"
 
 [workspace.dependencies]
-lark-span = { path = "crates/lark-span" }
-lark-diag = { path = "crates/lark-diag" }
-lark-syntax = { path = "crates/lark-syntax" }
-lark-cpp = { path = "crates/lark-cpp" }
-lark-resolve = { path = "crates/lark-resolve" }
-lark-types = { path = "crates/lark-types" }
-lark-mono = { path = "crates/lark-mono" }
-lark-codegen = { path = "crates/lark-codegen" }
-lark-driver = { path = "crates/lark-driver" }
-lark-fmt = { path = "crates/lark-fmt" }
-lark-lsp = { path = "crates/lark-lsp" }
-lark-cache = { path = "crates/lark-cache" }
-lark-pkg = { path = "crates/lark-pkg" }
+lark-span = { path = "crates/lark-span", version = "0.1.0" }
+lark-diag = { path = "crates/lark-diag", version = "0.1.0" }
+lark-syntax = { path = "crates/lark-syntax", version = "0.1.0" }
+lark-cpp = { path = "crates/lark-cpp", version = "0.1.0" }
+lark-resolve = { path = "crates/lark-resolve", version = "0.1.0" }
+lark-types = { path = "crates/lark-types", version = "0.1.0" }
+lark-mono = { path = "crates/lark-mono", version = "0.1.0" }
+lark-codegen = { path = "crates/lark-codegen", version = "0.1.0" }
+lark-driver = { path = "crates/lark-driver", version = "0.1.0" }
+lark-fmt = { path = "crates/lark-fmt", version = "0.1.0" }
+lark-lsp = { path = "crates/lark-lsp", version = "0.1.0" }
+lark-cache = { path = "crates/lark-cache", version = "0.1.0" }
+lark-pkg = { path = "crates/lark-pkg", version = "0.1.0" }
 
 [workspace.lints.rust]
 missing_docs = "warn"

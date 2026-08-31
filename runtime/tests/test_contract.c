@@ -8,6 +8,11 @@
  * Test type T8 in docs/test-strategy.md.
  * covers: R-1, R-2, R-4, R-5, M-4, M-5, F-4 */
 
+/* `setenv` and `unsetenv` come from POSIX, not from C11. With `-std=c11` a
+ * strict library hides them, so the macro asks for them. It must come before
+ * every include. */
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdlib.h>
 #include <string.h>
 

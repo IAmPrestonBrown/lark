@@ -1310,6 +1310,15 @@ impl Emitter<'_> {
 
         let mut prefix = String::new();
         for child in inner {
+            // The recursion below hoists the descendants of an earlier child,
+            // so a later child of the same list can already have a slot. The
+            // list was built before any of that ran, so the check happens
+            // again here. Without it, each level takes a second slot and the
+            // frame overruns the array that rule M-27 sized.
+            if self.hoisted.contains_key(&range_key(&child)) {
+                continue;
+            }
+
             // A deeper allocation goes first, so the recursion bottoms out.
             let deeper = self.hoist_nested_allocations(&child);
             prefix.push_str(&deeper);

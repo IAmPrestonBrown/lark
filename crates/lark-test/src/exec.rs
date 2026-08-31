@@ -146,6 +146,10 @@ pub fn build_and_run_full(
         .arg("-std=c11")
         .arg("-Wall")
         .arg("-Wextra")
+        // A frame that overruns its temporary array writes past the struct.
+        // The canary turns that into a loud failure on every platform, rather
+        // than a silent one that only some compilers catch.
+        .arg("-fstack-protector-strong")
         // `-iquote` applies to a quoted include only, so a module named
         // `pthread` never shadows the system `<pthread.h>`.
         .arg("-iquote")
@@ -172,7 +176,7 @@ pub fn build_and_run_full(
     }
 
     let printed = format!(
-        "{compiler} -std=c11 -o {} {}",
+        "{compiler} -std=c11 -fstack-protector-strong -o {} {}",
         binary_path.display(),
         sources
             .iter()
