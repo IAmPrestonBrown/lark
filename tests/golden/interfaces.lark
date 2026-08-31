@@ -12,8 +12,10 @@ iface Greet {
 }
 
 impl Greet for Person {
-    void by_value(Person this) { }
-    void by_pointer(gc Person* this) { }
+    void by_value(Person this) {
+    }
+    void by_pointer(gc Person* this) {
+    }
 }
 
 void calls(gc Person* p) {

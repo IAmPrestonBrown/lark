@@ -56,7 +56,7 @@ int deeply_nested(void) {
         .value = 1
     };
     return item->value + item->first->value + item->first->first->value
-         + item->first->first->first->value;
+    + item->first->first->first->value;
 }
 
 init int main(void) {

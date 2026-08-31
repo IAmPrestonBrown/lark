@@ -17,6 +17,6 @@ init int main(void) {
 
     stdio::printf("area %d\n", geometry::area(explicit_type));
     stdio::printf("fields %d %d %d\n", explicit_type->weight,
-                  explicit_type->label, inferred->weight);
+    explicit_type->label, inferred->weight);
     return 0;
 }

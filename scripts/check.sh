@@ -53,6 +53,9 @@ if [ -x benchmarks/run.sh ]; then
     # The driver needs the compiler, and `cargo test` does not always build
     # the binary itself.
     run "benchmark build" cargo build -p lark-cli
+    # Rule Z-1. The project holds its own sources to the one style the
+    # formatter writes. `scripts/lark-sources.sh` says which files those are.
+    run "lark fmt" sh -c './target/debug/lark fmt --check $(sh scripts/lark-sources.sh)' 
     run "benchmarks" env LARK="$root/target/debug/lark" sh benchmarks/run.sh --quick
 else
     echo "== benchmarks =="

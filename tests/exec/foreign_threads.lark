@@ -47,7 +47,7 @@ init int main(void) {
     void* handles[2];
 
     for (int index = 0; index < 2; index++) {
-        pthread::pthread_create(&handles[index], 0, (void*)worker, 0);
+        pthread::pthread_create(&handles[index], 0, (void*) worker, 0);
     }
 
     // The main thread collects while the workers allocate. Rule M-26.

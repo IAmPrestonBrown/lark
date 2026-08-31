@@ -36,11 +36,13 @@ Lark needs to be built to support multiple threads of execution
 
 // Additionally, you can pass function names from the scope for init
 // Lark will actually add the @init call implicitly to the start of the function like this
-@global(main) globals_2 {}
+@global(main) globals_2 {
+}
 
 // Lastly, if you want a function to have multiple implicit initializers and you want to manage the order
 // you can add a second argument which is the order it goes in (any ordering conflicts or ambiguities will result in implicit ordering off declaration)
-@global(main, 0) other_globals {}
+@global(main, 0) other_globals {
+}
 
 // Lark has interfaces, but they can only be used on managed structs
 // This is because the Lark transpiler needs to add metadata, so the managed
@@ -62,7 +64,7 @@ iface Greet {
     // notice how the user has to explicitly define the first argument
     // this way calling is very unintrusive on the compiler side
     // i.e. the compiler doesn't have to add extra args in defs or refs, etc.
-    void say_hi(Self this); 
+    void say_hi(Self this);
     void name_change(gc Self* this, gc char* new_name);
 }
 
@@ -73,7 +75,7 @@ impl Greet for Person {
         // module call, namespace is from stdio:: in this case
         stdio::printf("%s\n", this.name);
     }
-    
+
     void name_change(gc Person* this, gc char* new_name) {
         this->name = new_name;
     }
@@ -85,8 +87,9 @@ gc_leaf void handle_opaque_data(void* data);
 gc_safe void handle_gc_managed(gc void* data);
 
 init void main() {
-    @init main_globals; // initializer for the globals block from earlier
-    
+    @init main_globals;
+    // initializer for the globals block from earlier
+
     // creating allocated structs
     // novel non-c syntax for creating GC allocated structs
     // also an auto keyword for variable declarations
@@ -104,10 +107,15 @@ init void main() {
         .data_point = from_header
     };
 
-    handle_opaque_data(count); // error, no implicit cast between gc <> raw
-    handle_opaque_data((void*)count); // correct
-    
-    void* potentially_unmanaged; // assume set from elsewhere
-    handle_gc_managed(potentially_unmanaged); // error again, no implicit cast between gc <> raw
-    handle_gc_managed((gc void*)potentially_unmanaged); // correct
+    handle_opaque_data(count);
+    // error, no implicit cast between gc <> raw
+    handle_opaque_data((void*) count);
+    // correct
+
+    void* potentially_unmanaged;
+    // assume set from elsewhere
+    handle_gc_managed(potentially_unmanaged);
+    // error again, no implicit cast between gc <> raw
+    handle_gc_managed((gc void*) potentially_unmanaged);
+    // correct
 }

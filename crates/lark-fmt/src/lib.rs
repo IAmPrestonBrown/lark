@@ -84,11 +84,15 @@ struct Printer {
     /// `Box<int> value`. The flag says so, because the kind alone cannot: a
     /// `>` is also a comparison.
     previous_tight: bool,
-    /// How many initializer lists are open.
+    /// One entry per open initializer list, true when the list broke a line.
+    ///
+    /// A short list stays on one line, so its `}` follows the last field. A
+    /// list that already spans lines indents its fields and puts the `}` on a
+    /// line of its own, which is what a nested list needs to stay readable.
     ///
     /// An initializer stays on one line. A block does not. The tree says which
     /// one a brace opens, so the formatter needs no guess.
-    lists: usize,
+    lists: Vec<bool>,
     /// Whether the output ends at the start of a line.
     at_line_start: bool,
     /// How many newlines are pending, so a blank line collapses to one.
@@ -105,7 +109,7 @@ impl Printer {
             previous_code: None,
             previous_text: String::new(),
             previous_tight: false,
-            lists: 0,
+            lists: Vec::new(),
             at_line_start: true,
             pending_newlines: 0,
         }
@@ -155,21 +159,9 @@ impl Printer {
             return;
         }
 
-        // A closing brace leaves its block before it prints. One that closes
-        // an initializer stays on the line it started on.
-        if kind == R_CURLY {
-            if self.lists > 0 {
-                self.lists -= 1;
-                self.pending_newlines = 0;
-                self.space();
-                self.write_raw(token.text());
-                self.previous = Some(kind);
-                self.previous_code = Some(kind);
-                token.text().clone_into(&mut self.previous_text);
-                return;
-            }
-            self.depth = self.depth.saturating_sub(1);
-            self.break_line(1);
+        // A closing brace leaves its block before it prints.
+        if kind == R_CURLY && self.close_curly(token) {
+            return;
         }
 
         // A comment that stood on its own line keeps its own line.
@@ -230,7 +222,8 @@ impl Printer {
             R_PAREN | R_BRACK => self.parens = self.parens.saturating_sub(1),
             L_CURLY => {
                 if is_initializer(token) {
-                    self.lists += 1;
+                    self.lists.push(false);
+                    self.depth += 1;
                 } else {
                     self.depth += 1;
                     self.pending_newlines = 1;
@@ -248,7 +241,7 @@ impl Printer {
                 }
             }
             // A `;` inside a `for` header or an initializer keeps its place.
-            SEMICOLON if self.parens == 0 && self.lists == 0 => self.pending_newlines = 1,
+            SEMICOLON if self.parens == 0 && self.lists.is_empty() => self.pending_newlines = 1,
             COLON if matches!(self.previous_code, Some(IDENT | DEFAULT_KW)) => {
                 // A label and a `case` both end their line.
                 self.pending_newlines = 1;
@@ -262,12 +255,42 @@ impl Printer {
         self.previous_tight = false;
     }
 
+    /// Writes a `}` that closes an initializer, and reports whether it did.
+    ///
+    /// A short list stays on one line, so the brace follows the last field. A
+    /// list that broke a line puts the brace on a line of its own, at the
+    /// depth of the line that opened the list.
+    ///
+    /// A `}` that closes a block returns false, and the caller prints it.
+    fn close_curly(&mut self, token: &SyntaxToken) -> bool {
+        let Some(broke) = self.lists.pop() else {
+            self.depth = self.depth.saturating_sub(1);
+            self.break_line(1);
+            return false;
+        };
+        self.depth = self.depth.saturating_sub(1);
+        if broke {
+            self.break_line(1);
+        } else {
+            self.pending_newlines = 0;
+            self.space();
+        }
+        self.write_raw(token.text());
+        self.previous = Some(R_CURLY);
+        self.previous_code = Some(R_CURLY);
+        token.text().clone_into(&mut self.previous_text);
+        true
+    }
+
     /// Returns how many newlines belong before a token.
     ///
-    /// A top level item gets a blank line before it, so the file reads in
-    /// sections. Everything else gets one.
+    /// Rule Z-1 keeps at most one blank line anywhere, and a blank line inside
+    /// a body separates the steps of a function, so depth does not matter. A
+    /// blank line goes away in two places: before a closing brace, and right
+    /// after an opening one, because neither reads as a separator.
     fn newlines_before(&self, kind: SyntaxKind) -> usize {
-        if self.pending_newlines >= 2 && self.depth == 0 && kind != R_CURLY {
+        let after_open = matches!(self.previous_code, Some(L_CURLY));
+        if self.pending_newlines >= 2 && kind != R_CURLY && !after_open {
             return 2;
         }
         self.pending_newlines.min(1)
@@ -287,8 +310,19 @@ impl Printer {
         if must_separate(&self.previous_text, text) {
             return true;
         }
-        // A generic list binds to the name on each side of it.
+        // A generic list binds to the name on each side of it. `Box<int>*`
+        // and `Box<Box<int>>` both close with no space.
+        //
+        // A `>` that ends the list binds only to what continues the type. A
+        // name, a brace, or a keyword after it starts something new, so it
+        // takes a space: `Vector<int> v` and `struct Data<T> {`.
         if self.previous_tight {
+            if previous == R_ANGLE {
+                return !matches!(
+                    kind,
+                    R_ANGLE | STAR | COMMA | SEMICOLON | L_PAREN | R_PAREN | L_BRACK | R_BRACK
+                );
+            }
             return false;
         }
         // The `@` of a directive binds to the word after it.
@@ -298,7 +332,7 @@ impl Printer {
 
         // A separator always takes a space after it, whatever follows. So
         // does the brace of an initializer, as in `new Person { .name = x }`.
-        if matches!(previous, COMMA) || (previous == L_CURLY && self.lists > 0) {
+        if matches!(previous, COMMA) || (previous == L_CURLY && !self.lists.is_empty()) {
             return true;
         }
         // Nothing follows an opening bracket, and nothing precedes a closing
@@ -370,6 +404,12 @@ impl Printer {
         if self.out.is_empty() {
             self.pending_newlines = 0;
             return;
+        }
+        // A list that holds a line break indents its fields and closes on its
+        // own line. A break inside a nested list breaks every list that holds
+        // it, because the outer one now spans lines as well.
+        for broke in &mut self.lists {
+            *broke = true;
         }
         while self.out.ends_with(' ') {
             self.out.pop();

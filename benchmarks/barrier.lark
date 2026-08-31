@@ -29,7 +29,7 @@ init int main(int argc, char** argv) {
         gc Slot* young = new Slot { .value = round };
         // The store goes into an object that outlived the young one.
         holders[round % width].link = young;
-        total = total + (long long) holders[round % width].link->value;
+        total = total +(long long) holders[round % width].link->value;
     }
 
     bench::bench_report("barrier", bench::bench_now() - start, total);

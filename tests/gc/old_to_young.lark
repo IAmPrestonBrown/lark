@@ -41,7 +41,7 @@ int attach_after_churn(int rounds) {
     }
 
     if (head->next == 0) {
-        return -1;
+        return - 1;
     }
     return head->value + head->next->value;
 }
@@ -67,7 +67,7 @@ int attach_into_an_array(int rounds) {
     int total = 0;
     for (int index = 0; index < 8; index++) {
         if (items[index].next == 0) {
-            return -1;
+            return - 1;
         }
         total = total + items[index].next->value;
     }

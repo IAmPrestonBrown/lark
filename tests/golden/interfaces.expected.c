@@ -31,10 +31,12 @@ struct Person {
 
 #line 14 "interfaces.lark"
 
-static void lk_interfaces__Greet__Person__by_value(Person this) { }
-static void lk_interfaces__Greet__Person__by_pointer(Person* this) { }
+static void lk_interfaces__Greet__Person__by_value(Person this) {
+    }
+static void lk_interfaces__Greet__Person__by_pointer(Person* this) {
+    }
 
-#line 19 "interfaces.lark"
+#line 21 "interfaces.lark"
 static void calls(Person* p) {
     /* lark: shadow stack frame, 1 managed locals, 0 temporaries */
     struct { lark_frame_hdr h; void **s[1]; void *t[1]; } _lk_frame;

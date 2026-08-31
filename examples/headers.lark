@@ -8,18 +8,17 @@
  * Compare `examples/stdio.lark`, which declares the same functions by hand.
  * That file exists for a program that cannot reach a C compiler.
  */
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 /* A managed struct still works beside the C names. */
 managed struct Greeting {
-    const char *who;
+    const char* who;
     int count;
 };
 
-static void say(gc Greeting *greeting)
+static void say(gc Greeting* greeting)
 {
     for (int i = 0; i < greeting->count; i = i + 1) {
         printf("hello %s\n", greeting->who);
@@ -28,7 +27,7 @@ static void say(gc Greeting *greeting)
 
 init int main(void)
 {
-    const char *name = "Lark";
+    const char* name = "Lark";
     size_t length = strlen(name);
 
     auto greeting = new Greeting { .who = name, .count = 2 };
@@ -37,7 +36,7 @@ init int main(void)
     /* `stdout` is a macro, not a declaration. Rule C-1c keeps it in the table. */
     fprintf(stdout, "%s has %zu bytes\n", name, length);
 
-    if (length != (size_t) 4) {
+    if (length !=(size_t) 4) {
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

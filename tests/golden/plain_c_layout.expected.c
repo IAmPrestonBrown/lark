@@ -8,11 +8,11 @@ typedef struct node node;
 
 /* lark: local types */
 typedef struct node node;
-typedef int (*visit_fn)(node *item, size_t depth);
+typedef int(* visit_fn)(node* item, size_t depth);
 
 /* lark: forward declarations */
-static int visit_one(node *item, size_t depth);
-static int walk(node *head, visit_fn visit);
+static int visit_one(node* item, size_t depth);
+static int walk(node* head, visit_fn visit);
 
 // The emitted C for a plain C11 file.
 //
@@ -31,20 +31,20 @@ static int walk(node *head, visit_fn visit);
 #line 13 "plain_c_layout.lark"
 struct node {
     int value;
-    node *next;
+    node* next;
 };
 
 #line 18 "plain_c_layout.lark"
-static int visit_one(node *item, size_t depth)
+static int visit_one(node* item, size_t depth)
 {
-    return item->value + (int) depth;
+    return item->value +(int) depth;
 }
 
 #line 23 "plain_c_layout.lark"
-static int walk(node *head, visit_fn visit)
+static int walk(node* head, visit_fn visit)
 {
     int total = 0;
-    for (node *item = head; item != NULL; item = item->next) {
+    for (node* item = head; item != NULL; item = item->next) {
         total += visit(item, 0);
     }
     return total + visit_one(head, 1);

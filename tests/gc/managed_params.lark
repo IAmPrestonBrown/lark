@@ -5,8 +5,15 @@
 
 @import stdio
 
-managed struct Wide { int first; int second; int third; }
-managed struct Holder { gc Wide* wide; gc Holder* next; }
+managed struct Wide {
+    int first;
+    int second;
+    int third;
+}
+managed struct Holder {
+    gc Wide* wide;
+    gc Holder* next;
+}
 
 // The parameter is managed and the body allocates, so the parameter needs a
 // slot. Without one, every `Holder` written after a move points at the old

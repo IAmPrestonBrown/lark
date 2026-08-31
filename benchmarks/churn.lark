@@ -21,7 +21,7 @@ init int main(int argc, char** argv) {
     for (int index = 0; index < rounds; index++) {
         // This one dies before the next iteration.
         gc Cell* dead = new Cell { .value = index };
-        total = total + (long long) dead->value;
+        total = total +(long long) dead->value;
 
         // One in a thousand survives, so the live set grows slowly.
         if (index % 1000 == 0) {

@@ -25,7 +25,7 @@ init int main(void) {
     long long total = 0;
     for (gc Cell* walk = head; walk != 0; walk = walk->next) {
         gc Cell* garbage = new Cell { .value = walk->value };
-        total = total + (long long) garbage->value;
+        total = total +(long long) garbage->value;
     }
 
     stdio::printf("total %lld\n", total);

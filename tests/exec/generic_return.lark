@@ -43,7 +43,7 @@ init int main(void) {
     gc Pair<int, char>* both = pair();
 
     stdio::printf("squares %d %d %d\n", squares->data[2], squares->data[4],
-                  squares->len);
+    squares->len);
     stdio::printf("bytes %c %d\n", bytes->data[0], bytes->len);
     stdio::printf("pair %d %c\n", both->first, both->second);
     return 0;

@@ -8,7 +8,6 @@
 // library hides it, so the macro asks for it. It must come before every
 // include.
 #define _POSIX_C_SOURCE 199309L
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +18,7 @@
 export double bench_now(void) {
     struct timespec moment;
     clock_gettime(CLOCK_MONOTONIC, &moment);
-    return (double) moment.tv_sec + (double) moment.tv_nsec / 1e9;
+    return (double) moment.tv_sec +(double) moment.tv_nsec / 1e9;
 }
 
 // Returns the workload size that the command line asked for.
@@ -46,7 +45,7 @@ export int bench_scale(int count, char** arguments, int full, int quick) {
 export void bench_report(const char* name, double seconds, long long checksum) {
     lark_gc_stats stats = lark_gc_statistics();
     printf("%s\t%s\t%.3f\t%zu\t%zu\t%zu\t%lld\n", lark_gc_name(), name,
-           seconds * 1000.0, stats.total_allocations, stats.collections,
-           stats.heap_bytes, checksum);
+    seconds * 1000.0, stats.total_allocations, stats.collections,
+    stats.heap_bytes, checksum);
     fflush(stdout);
 }

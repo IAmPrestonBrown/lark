@@ -11,4 +11,6 @@ export int area(gc Circle* c) {
 }
 
 // No `export`, so no other module sees this name. See rule N-6.
-int secret(void) { return 1; }
+int secret(void) {
+    return 1;
+}

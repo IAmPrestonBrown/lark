@@ -33,6 +33,6 @@ init int main(void) {
     gc Wide<int>* wide = new Wide<int> { .first = 11, .second = 22, .third = 33 };
     gc Holder* kept = churn(wide, 4000);
     stdio::printf("wide %d %d %d\n", kept->wide->first, kept->wide->second,
-                  kept->wide->third);
+    kept->wide->third);
     return 0;
 }

@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "own_header.h"
 
-int label_length(const Label *item)
+int label_length(const Label* item)
 {
     return item->length;
 }

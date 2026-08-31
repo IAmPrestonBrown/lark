@@ -39,7 +39,7 @@ init int main(void) {
     point.second = 4;
 
     stdio::printf("%d %s %d\n", plain.value, boxed->value->name,
-                  point.first + point.second);
+    point.first + point.second);
     stdio::printf("%d %d\n", larger<int>(5, 3), larger<double>(1.5, 2.5));
 
     // Rule G-1 with rule T-10. The inferred type must name the
@@ -53,6 +53,6 @@ init int main(void) {
     nested.second.value = 13;
 
     stdio::printf("%d %d %d\n", inferred->value, nested.first,
-                  nested.second.value);
+    nested.second.value);
     return 0;
 }

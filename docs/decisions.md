@@ -1602,3 +1602,31 @@ it. This is not a regression. It never worked.
 `lark-types` does not carry. The resolver builds one for namespaces in the same
 phase, so the two land together. A standard library needs it, because
 `auto v = Vector::with_capacity(8)` is the shape collections use everywhere.
+
+## D171 - The formatter indents a multi-line initializer
+**Status:** settled.
+**Reason:** An initializer list took no indentation and its `}` always joined
+the last field. A nested list therefore flattened: three levels of `new Pair`
+all sat at one depth, and every brace piled onto one line. Running the
+formatter over the project sources made them harder to read, which is worse
+than no formatter.
+**Method:** Rule Z-1. Each open list records whether it broke a line. A short
+list keeps the old shape, so `new Pair { .value = 1 }` stays on one line. A
+list that broke a line indents its fields and puts the brace on a line of its
+own.
+
+Two more defects came out of the same run. A blank line inside a body vanished,
+because the code allowed one only at depth zero while the stated rule said
+"anywhere". A closing generic angle bound tight to whatever followed it, so
+`struct Data<T> {` lost its space. Both are fixed.
+
+## D172 - Three fixture groups stay out of the formatter
+**Status:** settled.
+**Reason:** A `parse` fixture holds a deliberate syntax error, and the
+formatter has nothing meaningful to say about text that does not parse. A `ui`
+fixture anchors each expected diagnostic to a line number. An `lsp` fixture
+marks a cursor with `<|>`. Formatting any of the three moved what the fixture
+points at, and twenty tests failed.
+**Method:** `scripts/lark-sources.sh` lists the 40 files the formatter owns and
+excludes the 22 it does not. The gate runs `lark fmt --check` over that list,
+so the sources cannot drift.

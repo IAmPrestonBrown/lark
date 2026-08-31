@@ -41,16 +41,18 @@ impl Greet for Person {
 // Globals hold zero at program start. @init runs the initializers. (rule I-7)
 @global main_globals {
     gc Person* person2 = new Person {
-        .name = "Joe",           // a literal is assignable to gc char* (rule T-8)
-        .age  = 37
+        .name = "Joe", // a literal is assignable to gc char* (rule T-8)
+        .age = 37
     };
 }
 
 // This block attaches to main. The transpiler inserts its @init. (rule I-12)
-@global(main) globals_2 {}
+@global(main) globals_2 {
+}
 
 // Order number 0 runs before every unnumbered attached block. (rule I-13)
-@global(main, 0) other_globals {}
+@global(main, 0) other_globals {
+}
 
 // External declarations. gc_leaf is the opt in. An unmarked extern
 // is gc_safe. (rule M-21)
@@ -74,7 +76,7 @@ init int main(void) {
     // auto keeps gc, so preston is gc Person*. (rule T-10)
     auto preston = new Person {
         .name = "Preston Brown",
-        .age  = 18
+        .age = 18
     };
 
     // The receiver is Person by value, so the call derefs. (rule O-18)
@@ -88,11 +90,13 @@ init int main(void) {
     };
 
     // handle_opaque_data(count);          // LK0301: no implicit crossing
-    handle_opaque_data((void*)count);      // correct
+    handle_opaque_data((void*) count);
+    // correct
 
     void* potentially_unmanaged = NULL;
     // handle_gc_managed(potentially_unmanaged);        // LK0301
-    handle_gc_managed((gc void*)potentially_unmanaged); // correct
+    handle_gc_managed((gc void*) potentially_unmanaged);
+    // correct
 
     // An interior pointer into a managed buffer. (rule M-6)
     gc char* buf = new char[256];
@@ -111,10 +115,11 @@ export managed struct Box<T> {
 }
 
 void box_demo(void) {
-    Box<int> a;                  // no header, plain C struct
+    Box<int> a;
+    // no header, plain C struct
     a.value = 7;
 
-    gc Box<gc Person*>* b = new Box<gc Person*> {   // header, one gc field
+    gc Box<gc Person*>* b = new Box<gc Person*> { // header, one gc field
         .value = new Person { .name = "Grace", .age = 45 }
     };
     stdio::printf("%d %s\n", a.value, b->value->name);

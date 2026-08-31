@@ -6,5 +6,5 @@
 
 // A thread handle is opaque to Lark, so a raw pointer holds it.
 export gc_safe int pthread_create(void* thread, void* attributes,
-                                  void* start, void* argument);
+void* start, void* argument);
 export gc_safe int pthread_join(void* thread, void* result);

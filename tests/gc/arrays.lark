@@ -32,7 +32,7 @@ int array_of_pointers(int count) {
     int total = 0;
     for (int index = 0; index < count; index++) {
         if (items[index].target->value != index * 2) {
-            return -1;
+            return - 1;
         }
         total = total + items[index].value;
     }

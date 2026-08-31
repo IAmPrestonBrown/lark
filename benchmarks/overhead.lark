@@ -21,7 +21,7 @@ long long round_trip(int length) {
     }
     long long total = 0;
     for (gc Node* walk = head; walk != 0; walk = walk->next) {
-        total = total + (long long) walk->value;
+        total = total +(long long) walk->value;
     }
     return total;
 }

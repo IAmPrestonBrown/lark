@@ -2,4 +2,4 @@
 // Lark code uses. Rule N-6 needs `export` on every symbol that another module
 // can name.
 
-export int printf(const char *restrict format, ...);
+export int printf(const char* restrict format, ...);

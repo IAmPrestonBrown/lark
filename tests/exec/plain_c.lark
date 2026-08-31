@@ -7,23 +7,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #define LIMIT 8
 #define SQUARE(x) ((x) * (x))
 
 typedef struct point {
     int x;
     int y;
-} point;
+}
+point;
 
-static int compare_int(const void *left, const void *right)
+static int compare_int(const void* left, const void* right)
 {
-    const int *a = left;
-    const int *b = right;
-    return (*a > *b) - (*a < *b);
+    const int* a = left;
+    const int* b = right;
+    return (* a > * b) -(* a < * b);
 }
 
-static int sum(const int *values, size_t count)
+static int sum(const int* values, size_t count)
 {
     int total = 0;
     for (size_t i = 0; i < count; i += 1) {
@@ -48,12 +48,13 @@ int main(void)
     char label[16];
 
     _Static_assert(LIMIT == 8, "the array holds eight items");
-    qsort(values, LIMIT, sizeof(int), compare_int);
+    qsort(values, LIMIT, sizeof (int), compare_int);
     strcpy(label, "totals");
 
     printf("%s %d %d\n", label, sum(values, LIMIT), SQUARE(3));
     printf("sorted %d %d %d\n", values[0], values[3], values[LIMIT - 1]);
     printf("point %d %d add %d\n", origin.x, origin.y, add(4, 5));
-    printf("kind %d ranged %d\n", _Generic(origin.x, int: 1, default: 0), sum(ranged, 6));
+    printf("kind %d ranged %d\n", _Generic(origin.x, int : 1, default :
+    0), sum(ranged, 6));
     return EXIT_SUCCESS;
 }
