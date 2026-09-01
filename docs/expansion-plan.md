@@ -188,6 +188,27 @@ export void print_async(gc char* s) { ... }
 This changes rule X-5. Today an export links under its last segment. That
 cannot survive two namespaces exporting `Vector`.
 
+**A first attempt failed, and the reason shapes the second.** Mangling at the
+two obvious places, the declaration name and the qualified use, broke 141
+tests. A name reaches the emitted C through more paths than those two, and the
+paths do not share a function:
+
+| Path | Source |
+|---|---|
+| A function definition and its forward declaration | The syntax tree |
+| A record tag, its typedef, and its definition | The `Managed` model |
+| A declaration in the generated header | `header.rs`, built from the tree |
+| The element type of a `new` | `allocation_target` |
+| A field type and a parameter type | The syntax tree |
+
+The change therefore needs one step before it: every emitted name goes through
+one function, whatever built it. That refactor is testable on its own, because
+the function returns the written name until the switch flips.
+
+Do the refactor, keep the gate green, then change what the one function
+returns. A partial application leaves the declaration and the use disagreeing,
+and every program fails to link.
+
 ```c
 export managed struct Vector<T> { }   // links as lk_std_collections__Vector
 

@@ -1747,3 +1747,20 @@ and allowing more is never a breaking change. A reader today knows that
 Rule N-21 makes a sibling visible without a qualifier inside the block, and a
 local shadows, because C already gave the local the name that the programmer
 wrote.
+
+## D180 - The ABI change needs one name function first
+**Status:** open. Planned for phase E2.
+**Reason:** A first attempt mangled an exported name at the declaration and at
+the qualified use. That broke 141 tests, because a name reaches the emitted C
+through more paths than those two, and the paths share no function. A record
+tag comes from the `Managed` model, a header declaration comes from
+`header.rs`, and the element type of a `new` comes from `allocation_target`.
+
+A partial application is worse than none. The declaration and the use disagree,
+so every program fails to link.
+**Method:** One step before the change. Every emitted name goes through one
+function, whatever built it. That refactor holds the gate green, because the
+function returns the written name until the switch flips. The change is then
+one edit inside one function, and its blast radius is visible before it runs.
+
+The attempt was reverted rather than left half applied.
