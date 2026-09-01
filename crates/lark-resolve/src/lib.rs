@@ -177,6 +177,7 @@ impl Builder<'_> {
             source,
             parse: parsed,
             table: found.table,
+            namespaces: found.namespaces,
             imports,
             has_unread_include: found.has_unread_include && !headers.is_complete(),
             headers,

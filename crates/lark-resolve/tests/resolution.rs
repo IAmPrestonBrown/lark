@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use lark_diag::{Code, LK0100, LK0600, LK0610, LK0611, LK0612, LK0613};
+use lark_diag::{Code, LK0100, LK0600, LK0610, LK0611, LK0612, LK0613, LK0614};
 use lark_resolve::{MemoryLoader, Resolution, SymbolKind, Visibility, resolve};
 
 /// Resolves a set of modules, with the first one as the root.
@@ -295,4 +295,40 @@ fn the_tour_example_resolves_with_no_problem() {
         "the tour must resolve cleanly: {reported:?}"
     );
     assert_eq!(resolution.graph.len(), 2, "the tour imports stdio");
+}
+
+/// covers: N-20
+#[test]
+fn a_namespace_block_holds_no_type_definition() {
+    // A function and a variable belong in a block.
+    const NAMES_ONLY: &str = "struct Point { int x; }\nnamespace detail { struct Point origin; }\n";
+    const CLEAN: &str = "namespace detail {\n\
+         int helper(int n) { return n + 1; }\n\
+         int counter = 0;\n\
+     }\n";
+    let loader = MemoryLoader::new([("app", CLEAN)]);
+    let clean = resolve(&loader, "app", &PathBuf::from("app.lark"), CLEAN);
+    assert!(!reports(&clean, LK0614), "{:?}", codes(&clean));
+
+    // Rule N-20. A type takes its namespace from the directory instead.
+    for source in [
+        "namespace detail { struct Point { int x; } }\n",
+        "namespace detail { union Either { int a; } }\n",
+        "namespace detail { enum Colour { RED } }\n",
+        "namespace detail { typedef int Small; }\n",
+        "namespace detail { iface Show { void show(Self this); } }\n",
+    ] {
+        let loader = MemoryLoader::new([("app", source)]);
+        let found = resolve(&loader, "app", &PathBuf::from("app.lark"), source);
+        assert!(
+            reports(&found, LK0614),
+            "{source:?} gave {:?}",
+            codes(&found)
+        );
+    }
+
+    // A declaration that names a type rather than defining one is fine.
+    let loader = MemoryLoader::new([("app", NAMES_ONLY)]);
+    let found = resolve(&loader, "app", &PathBuf::from("app.lark"), NAMES_ONLY);
+    assert!(!reports(&found, LK0614), "{:?}", codes(&found));
 }

@@ -33,6 +33,8 @@ pub struct Module {
     pub parse: Parse,
     /// Every top level name that the module declares.
     pub table: SymbolTable,
+    /// Every namespace path that a block in this module opens. See rule N-19.
+    pub namespaces: BTreeSet<String>,
     /// Every `@import` directive, with the module it names.
     pub imports: Vec<ResolvedImport>,
     /// Whether the module holds an `#include` that the front end cannot read.

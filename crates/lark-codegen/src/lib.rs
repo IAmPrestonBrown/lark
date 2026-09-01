@@ -309,6 +309,7 @@ pub fn emit(
         record_instances: String::new(),
         exported: exported_names(&root),
         locals: std::collections::BTreeMap::new(),
+        namespaces: module.namespaces.clone(),
         imported,
     };
     emitter.run();
@@ -367,6 +368,8 @@ struct Emitter<'a> {
     hoisted: std::collections::HashMap<(u32, u32), (usize, String)>,
     /// The type of every local in scope, and whether it is a pointer.
     locals: std::collections::BTreeMap<String, (String, bool)>,
+    /// Every namespace that a block of this module opens. See rule N-19.
+    namespaces: std::collections::BTreeSet<String>,
     /// The managed records of every other module, by module name.
     ///
     /// Rule M-5a needs the descriptor of the record that a `new` names, and
@@ -875,6 +878,21 @@ impl Emitter<'_> {
             }
             GLOBAL_BLOCK => {
                 self.write_global_block(item);
+                return;
+            }
+            // Rule N-19. The block is a name for the reader, not a scope that
+            // C holds, so the items come out and the block itself does not.
+            NAMESPACE_DEF => {
+                // The name of the block reaches the emitted C through each
+                // symbol it holds, so the name node itself writes nothing.
+                for child in item.children().filter(|child| child.kind() != NAME) {
+                    self.write_item(&child);
+                    // The block held the separation in the source, and it does
+                    // not reach the output, so the items take their own.
+                    if !self.out.ends_with('\n') {
+                        self.out.push('\n');
+                    }
+                }
                 return;
             }
             _ => {}
@@ -1406,7 +1424,20 @@ impl Emitter<'_> {
                     self.out.push_str(&name);
                     return;
                 }
+                // Rule N-19. A name inside a namespace block carries the path
+                // of the block, because C holds one flat space of symbols and
+                // two blocks can declare the same name.
+                if let Some(path) = names::namespace_of(node)
+                    && let Some(token) = node.first_token()
+                {
+                    let name = names::namespace_symbol(&self.module.name, &path, token.text());
+                    self.out.push_str(&name);
+                    return;
+                }
             }
+            // A use of a name that a namespace of this module declares.
+            PATH if self.write_namespace_use(node) => return,
+            NAME_REF if self.write_namespace_member(node) => return,
             _ => {}
         }
         for element in node.children_with_tokens() {
@@ -1672,6 +1703,65 @@ impl Emitter<'_> {
         true
     }
 
+    /// Writes a use of a name that a namespace of this module declares.
+    ///
+    /// Rule N-19. `detail::grow` names a block of this file, not a module, so
+    /// the emitted name is the one that the declaration produced.
+    fn write_namespace_use(&mut self, node: &SyntaxNode) -> bool {
+        let names: Vec<String> = child_tokens(node)
+            .filter(|token| token.kind() == IDENT)
+            .map(|token| token.text().to_owned())
+            .collect();
+        let Some((name, prefix)) = names.split_last() else {
+            return false;
+        };
+        if prefix.is_empty() {
+            return false;
+        }
+        let path = prefix.join("::");
+        if !self.namespaces.contains(&path) {
+            return false;
+        }
+        let symbol = names::namespace_symbol(&self.module.name, &path, name);
+        self.out.push_str(&symbol);
+        true
+    }
+
+    /// Writes a bare name that the enclosing namespace declares.
+    ///
+    /// Rule N-21. A name of the namespace is visible inside it with no
+    /// qualifier, and inside every namespace nested in it, so the search runs
+    /// from the innermost outward. A local shadows, because C already gave it
+    /// the name that the programmer wrote.
+    fn write_namespace_member(&mut self, node: &SyntaxNode) -> bool {
+        let Some(token) = node.first_token() else {
+            return false;
+        };
+        let name = token.text().to_owned();
+        if self.locals.contains_key(&name) {
+            return false;
+        }
+        let Some(path) = names::enclosing_namespace(node) else {
+            return false;
+        };
+        let mut parts: Vec<&str> = path.split("::").collect();
+        while !parts.is_empty() {
+            let prefix = parts.join("::");
+            if self
+                .module
+                .table
+                .get(&format!("{prefix}::{name}"))
+                .is_some()
+            {
+                let symbol = names::namespace_symbol(&self.module.name, &prefix, &name);
+                self.out.push_str(&symbol);
+                return true;
+            }
+            parts.pop();
+        }
+        false
+    }
+
     /// Writes a method call, and reports whether it produced one.
     ///
     /// Rule O-19 makes a call on a concrete type a direct call.
@@ -1844,6 +1934,7 @@ impl Emitter<'_> {
             module: self.module,
             managed: self.managed.clone(),
             imported: self.imported.clone(),
+            namespaces: self.namespaces.clone(),
             interfaces: self.interfaces.clone(),
             globals: self.globals.clone(),
             foreign: self.foreign.clone(),
@@ -1912,6 +2003,7 @@ impl Emitter<'_> {
                 module: self.module,
                 managed: self.managed.clone(),
                 imported: self.imported.clone(),
+                namespaces: self.namespaces.clone(),
                 interfaces: self.interfaces.clone(),
                 globals: self.globals.clone(),
                 foreign: self.foreign.clone(),

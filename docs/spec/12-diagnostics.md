@@ -81,6 +81,7 @@ text. A message can improve without a change to the test suite.
 | `LK0611` | N-11 | the name is not exported from that module |
 | `LK0612` | N-2 | a module reference needs the `name::` prefix |
 | `LK0613` | N-2 | no module with that name is imported here |
+| `LK0614` | N-20 | a namespace block holds no type definition |
 
 ### Initialization
 

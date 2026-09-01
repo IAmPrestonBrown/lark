@@ -89,6 +89,33 @@ std::io::file::open("notes.txt");
 Rule X-5 keeps the last segment in the emitted C, so a name that reaches C
 carries no path.
 
+**Rule N-19.** A `namespace` block nests inside the namespace that holds it,
+and inside another block. It takes no `export` of its own, because rule N-7
+exports each item.
+
+```c
+// file std/collections.lark, namespace std::collections
+namespace detail {
+    int grow_capacity(int n) { ... }    // std::collections::detail::grow_capacity
+}
+```
+
+A name that a block declares carries the path of the block in the emitted C, so
+two blocks declare the same name without a collision.
+
+**Rule N-21.** A name of a namespace is visible inside it with no qualifier,
+and inside every namespace that nests in it. The search runs from the innermost
+namespace outward, and a local shadows, because C already gave the local the
+name that the programmer wrote.
+
+**Rule N-20.** A block names functions and variables. A type definition takes
+its namespace from the directory that holds the file, so a `struct`, a `union`,
+an `enum`, a `typedef`, and an `iface` all live at the top level of a file.
+Diagnostic LK0614 reports one inside a block.
+
+The rule keeps one way to name a type. A reader who sees `a::b::Thing` knows
+that `a/b.lark` declares it, with no second place to look.
+
 **Rule N-18.** Every generated file of a module carries the path with `::`
 replaced by two underscores, because no C identifier and no portable file name
 holds a colon. The module `std::collections` writes `std__collections.c` and

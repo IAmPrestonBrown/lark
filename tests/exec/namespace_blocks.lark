@@ -1,0 +1,43 @@
+// Namespace blocks inside one file.
+//
+// Rule N-19 nests a block inside the namespace that holds it. A name that a
+// block declares carries the path of the block in the emitted C, so two blocks
+// declare the same name without a collision.
+// covers: N-19, N-21, N-17
+
+@import stdio
+
+namespace outer {
+    int value(void) {
+        return 1;
+    }
+
+    // A block nests inside a block.
+    namespace inner {
+        int value(void) {
+            return 2;
+        }
+    }
+}
+
+// A second block declares the same name.
+namespace other {
+    int value(void) {
+        return 3;
+    }
+
+    // A block holds a variable as well as a function.
+    int base = 10;
+
+    // Rule N-21. A sibling needs no qualifier inside the block.
+    int shifted(void) {
+        return base + value();
+    }
+}
+
+init int main(void) {
+    stdio::printf("values %d %d %d\n", outer::value(), outer::inner::value(),
+    other::value());
+    stdio::printf("shifted %d\n", other::shifted());
+    return 0;
+}

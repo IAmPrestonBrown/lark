@@ -8,8 +8,8 @@ use std::collections::BTreeSet;
 use lark_span::Span;
 use lark_syntax::SyntaxKind::{
     DECL_SPECIFIERS, DECLARATION, DECLARATOR, ENUM_DEF, FN_DEF, GENERIC_PARAMS, GLOBAL_BLOCK,
-    IDENT, IFACE_DEF, IMPORT_DIRECTIVE, INIT_DECLARATOR, NAME, PARAM_LIST, POINTER, PP_DIRECTIVE,
-    STRUCT_DEF, TYPEDEF_KW, UNION_DEF,
+    IDENT, IFACE_DEF, IMPORT_DIRECTIVE, INIT_DECLARATOR, NAME, NAMESPACE_DEF, PARAM_LIST, POINTER,
+    PP_DIRECTIVE, STRUCT_DEF, TYPEDEF_KW, UNION_DEF,
 };
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
@@ -29,6 +29,8 @@ pub struct Import {
 pub struct Collected {
     /// Every top level name that the module declares.
     pub table: SymbolTable,
+    /// Every namespace path that a block in this module opens. See rule N-19.
+    pub namespaces: BTreeSet<String>,
     /// Every module that this one imports.
     pub imports: Vec<Import>,
     /// Whether the module holds an `#include` that the front end cannot read.
@@ -88,11 +90,53 @@ pub fn collect(root: &SyntaxNode) -> Collected {
             IFACE_DEF => collect_iface(&item, &mut found.table),
             GLOBAL_BLOCK => collect_global_block(&item, &mut found.table),
             DECLARATION | FN_DEF => collect_declaration(&item, &mut found.table, None),
+            NAMESPACE_DEF => collect_namespace(&item, &mut found, ""),
             _ => {}
         }
     }
 
     found
+}
+
+/// Records every name that a namespace block declares, under its path.
+///
+/// Rule N-19. A name inside the block belongs to the namespace, so the table
+/// holds it under the whole path. A nested block composes, so `a::b::f` is one
+/// entry rather than two.
+fn collect_namespace(item: &SyntaxNode, found: &mut Collected, outer: &str) {
+    let Some(name) = item
+        .children()
+        .find(|child| child.kind() == NAME)
+        .and_then(|node| node.first_token())
+        .map(|token| token.text().to_owned())
+    else {
+        return;
+    };
+    let path = if outer.is_empty() {
+        name
+    } else {
+        format!("{outer}::{name}")
+    };
+    found.namespaces.insert(path.clone());
+
+    for child in item.children() {
+        let mut inner = SymbolTable::new();
+        match child.kind() {
+            NAMESPACE_DEF => {
+                collect_namespace(&child, found, &path);
+                continue;
+            }
+            IFACE_DEF => collect_iface(&child, &mut inner),
+            GLOBAL_BLOCK => collect_global_block(&child, &mut inner),
+            DECLARATION | FN_DEF => collect_declaration(&child, &mut inner, None),
+            _ => continue,
+        }
+        for symbol in inner.iter() {
+            let mut moved = symbol.clone();
+            moved.name = format!("{path}::{}", symbol.name);
+            found.table.insert(moved);
+        }
+    }
 }
 
 /// Records the module name that an `@import` directive gives.

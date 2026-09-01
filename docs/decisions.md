@@ -1728,3 +1728,22 @@ generated name goes through it, so a file name and a symbol never disagree.
 Four places read only the first segment of a path and now read all of it: the
 generated include of a header, the same include in the emitted C, the C name
 of a qualified use, and the descriptor lookup of a `new`.
+
+## D179 - A namespace block names functions and variables, not types
+**Status:** settled.
+**Reason:** A block that held a type needed nine collectors to descend into it,
+and every record tag, descriptor, and use to carry the path. The chosen design
+put helpers in a block and types at file level, and a directory namespace
+already names a type as `std::collections::Vector`.
+**Method:** Rules N-19, N-20, and N-21. A block holds a function and a
+variable, and each name it declares carries the path of the block in the
+emitted C, so two blocks declare the same name without a collision. Diagnostic
+LK0614 reports a type definition inside a block, and it names the fix.
+
+The restriction is not permanent. A later phase can allow a type in a block,
+and allowing more is never a breaking change. A reader today knows that
+`a::b::Thing` comes from `a/b.lark`, with no second place to look.
+
+Rule N-21 makes a sibling visible without a qualifier inside the block, and a
+local shadows, because C already gave the local the name that the programmer
+wrote.

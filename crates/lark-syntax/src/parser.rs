@@ -729,6 +729,16 @@ impl Parser<'_> {
             self.at_item(Some(checkpoint));
             return;
         }
+        // Rule N-19. `namespace a { ... }` nests inside the namespace that the
+        // directory gives. Rule L-3 allows the word elsewhere, and no valid C11
+        // reads `namespace a {` at item level.
+        if self.nth_word(skip, "namespace")
+            && self.nth(skip + 1) == IDENT
+            && self.nth(skip + 2) == L_CURLY
+        {
+            self.namespace_def(exported);
+            return;
+        }
         if self.nth_word(skip, "iface") && self.nth(skip + 1) == IDENT {
             self.iface_def(exported);
             return;
@@ -879,6 +889,31 @@ impl Parser<'_> {
         } else {
             self.error(LK0110);
         }
+        self.finish();
+    }
+
+    /// Parses `namespace name { items }`.
+    ///
+    /// Rule N-19. The block nests inside the namespace that holds it, and it
+    /// takes no `export` of its own, because rule N-7 exports each item.
+    fn namespace_def(&mut self, exported: bool) {
+        self.start(NAMESPACE_DEF);
+        if exported {
+            self.bump();
+        }
+        self.bump();
+        self.name();
+        self.push_scope();
+        self.expect(L_CURLY);
+        while !self.at_end() && !self.at(R_CURLY) {
+            let before = self.position;
+            self.item();
+            if self.position == before {
+                self.bump_error();
+            }
+        }
+        self.expect(R_CURLY);
+        self.scopes.pop();
         self.finish();
     }
 

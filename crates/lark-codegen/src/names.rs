@@ -4,9 +4,10 @@
 //! `lk_` prefix for a symbol that the transpiler generates.
 
 use lark_syntax::SyntaxKind::{
-    ARROW, DECL_SPECIFIERS, DECLARATION, DECLARATOR, DOT, ENUM_DEF, EXTERN_KW, FN_DEF,
-    GLOBAL_BLOCK, IDENT, IFACE_DEF, INIT_DECLARATOR, NAME, PARAM_LIST, PATH, POINTER, STATIC_KW,
-    STRUCT_DEF, TYPEDEF_KW, UNION_DEF,
+    ARROW, BLOCK_STMT, DECL_SPECIFIERS, DECLARATION, DECLARATOR, DOT, ENUM_BODY, ENUM_DEF,
+    EXTERN_KW, FN_DEF, GLOBAL_BLOCK, IDENT, IFACE_DEF, IFACE_METHOD, INIT_DECLARATOR, NAME,
+    NAMESPACE_DEF, PARAM, PARAM_LIST, PATH, POINTER, STATIC_KW, STRUCT_BODY, STRUCT_DEF,
+    TYPEDEF_KW, UNION_DEF,
 };
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
@@ -248,6 +249,82 @@ pub fn declarators_of(item: &SyntaxNode) -> Vec<SyntaxNode> {
 #[must_use]
 pub fn header_file(module: &str) -> String {
     format!("{}.lark.h", flat_module(module))
+}
+
+/// Returns the C name of a declaration inside a namespace block.
+///
+/// Rule N-19 and rule X-5a. A block nests, so two blocks can declare the same
+/// name, and C has one flat space of symbols. The path therefore joins the
+/// module prefix, and the `lk_` prefix keeps it out of the space a programmer
+/// writes in.
+#[must_use]
+pub fn namespace_symbol(module: &str, path: &str, name: &str) -> String {
+    format!(
+        "{}__{}__{name}",
+        lark_mono::mangle::module_prefix(module),
+        path.replace("::", "__")
+    )
+}
+
+/// Returns the namespace path that holds a node, when a block holds it.
+///
+/// A parameter, a field, and a local are not members of the namespace. They
+/// live inside a declaration that is, and each one keeps the name that the
+/// programmer wrote, so the walk stops when it meets one of their holders.
+#[must_use]
+pub fn namespace_of(node: &SyntaxNode) -> Option<String> {
+    let mut parts: Vec<String> = Vec::new();
+    let mut at = node.parent();
+    while let Some(current) = at {
+        if matches!(
+            current.kind(),
+            PARAM | PARAM_LIST | BLOCK_STMT | STRUCT_BODY | ENUM_BODY | IFACE_METHOD
+        ) {
+            return None;
+        }
+        if current.kind() == NAMESPACE_DEF
+            && let Some(name) = current
+                .children()
+                .find(|child| child.kind() == NAME)
+                .and_then(|node| node.first_token())
+        {
+            parts.push(name.text().to_owned());
+        }
+        at = current.parent();
+    }
+    if parts.is_empty() {
+        return None;
+    }
+    parts.reverse();
+    Some(parts.join("::"))
+}
+
+/// Returns the namespace that holds a node, through a body or a parameter.
+///
+/// Rule N-21 makes a name of the namespace visible without a qualifier inside
+/// it, so a reference in a function body needs the namespace of the function.
+/// `namespace_of` stops at a body, because it answers a different question:
+/// which names the namespace declares.
+#[must_use]
+pub fn enclosing_namespace(node: &SyntaxNode) -> Option<String> {
+    let mut parts: Vec<String> = Vec::new();
+    let mut at = node.parent();
+    while let Some(current) = at {
+        if current.kind() == NAMESPACE_DEF
+            && let Some(name) = current
+                .children()
+                .find(|child| child.kind() == NAME)
+                .and_then(|node| node.first_token())
+        {
+            parts.push(name.text().to_owned());
+        }
+        at = current.parent();
+    }
+    if parts.is_empty() {
+        return None;
+    }
+    parts.reverse();
+    Some(parts.join("::"))
 }
 
 /// Returns the module path that one `@import` directive names.

@@ -178,6 +178,7 @@ syntax_kinds! {
         GLOBAL_BLOCK,
         GLOBAL_ATTACH,
         IFACE_DEF,
+        NAMESPACE_DEF,
         IFACE_METHOD,
         IMPL_DEF,
 

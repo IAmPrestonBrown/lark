@@ -162,6 +162,7 @@ catalog! {
     LK0611 = 611, Error, "N-11", "the name is not exported from that module";
     LK0612 = 612, Error, "N-2", "a module reference needs the `name::` prefix";
     LK0613 = 613, Error, "N-2", "no module with that name is imported here";
+    LK0614 = 614, Error, "N-20", "a namespace block holds no type definition";
     LK0700 = 700, Error, "I-1", "no function carries the `init` marker";
     LK0701 = 701, Error, "I-1", "more than one function carries the `init` marker";
     LK0710 = 710, Error, "I-11", "`@init` names an unknown global block";

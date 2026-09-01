@@ -4,11 +4,12 @@
 //! come from `#include`. The checks therefore report only what they can decide:
 //! a qualified path, an export, and a generic base name in a complete module.
 
-use lark_diag::{Diagnostic, Diagnostics, LK0100, LK0600, LK0610, LK0611, LK0612, LK0613};
+use lark_diag::{Diagnostic, Diagnostics, LK0100, LK0600, LK0610, LK0611, LK0612, LK0613, LK0614};
 use lark_span::SourceId;
 use lark_syntax::SyntaxKind::{
-    self, ARROW, BLOCK_STMT, DECL_SPECIFIERS, DECLARATION, DOT, FN_DEF, GENERIC_ARGS, IDENT,
-    IFACE_DEF, NAME_REF, PATH, TYPE_NAME,
+    self, ARROW, BLOCK_STMT, DECL_SPECIFIERS, DECLARATION, DOT, ENUM_BODY, ENUM_DEF, FN_DEF,
+    GENERIC_ARGS, IDENT, IFACE_DEF, NAME_REF, NAMESPACE_DEF, PATH, STRUCT_BODY, STRUCT_DEF,
+    TYPE_NAME, TYPEDEF_KW, UNION_DEF,
 };
 use lark_syntax::{SyntaxNode, SyntaxToken, child_tokens};
 
@@ -39,6 +40,53 @@ pub fn check(graph: &ModuleGraph, id: ModuleId, out: &mut Diagnostics) {
     check_paths(graph, id, source, &root, out);
     check_type_references(graph, id, source, &root, out);
     check_exported_signatures(graph, id, source, &root, out);
+    check_namespace_items(source, &root, out);
+}
+
+/// Reports a type definition inside a namespace block. See rule N-20.
+fn check_namespace_items(source: SourceId, root: &SyntaxNode, out: &mut Diagnostics) {
+    for block in root
+        .descendants()
+        .filter(|node| node.kind() == NAMESPACE_DEF)
+    {
+        for item in block.children() {
+            let defines_type = match item.kind() {
+                IFACE_DEF => true,
+                DECLARATION | FN_DEF => item
+                    .children()
+                    .filter(|child| child.kind() == DECL_SPECIFIERS)
+                    .any(|specifiers| {
+                        child_tokens(&specifiers).any(|token| token.kind() == TYPEDEF_KW)
+                            || specifiers.children().any(|child| {
+                                matches!(child.kind(), STRUCT_DEF | UNION_DEF | ENUM_DEF)
+                                    && child
+                                        .children()
+                                        .any(|body| matches!(body.kind(), STRUCT_BODY | ENUM_BODY))
+                            })
+                    }),
+                _ => false,
+            };
+            if !defines_type {
+                continue;
+            }
+            out.push(
+                Diagnostic::new(
+                    LK0614,
+                    source,
+                    lark_span::Span::new(
+                        u32::from(item.text_range().start()),
+                        u32::from(item.text_range().end()),
+                    ),
+                )
+                .label("a namespace block holds no type definition")
+                .note(
+                    "rule N-20. a block names functions and variables, and a type takes \
+                         its namespace from the directory that holds the file",
+                )
+                .help("move the definition to the top level of the file"),
+            );
+        }
+    }
 }
 
 /// Checks every `module::name` reference.
@@ -57,21 +105,42 @@ fn check_paths(
         let names: Vec<SyntaxToken> = child_tokens(&path)
             .filter(|token| token.kind() == IDENT)
             .collect();
-        let [module_token, name_token] = names.as_slice() else {
+        // Rule N-17. The last segment is the name, and every segment before it
+        // names what holds it. A path of one segment is no path at all.
+        let Some((name_token, prefix)) = names.split_last() else {
             continue;
         };
+        let Some(module_token) = prefix.first() else {
+            continue;
+        };
+        let qualifier: String = prefix
+            .iter()
+            .map(|token| token.text().to_owned())
+            .collect::<Vec<_>>()
+            .join("::");
 
-        let Some(target) = graph.import_target(id, module_token.text()) else {
+        // Rule N-19. A namespace of this module answers before an import does,
+        // because the block is closer than any other file.
+        if let Some(here) = graph.get(id)
+            && here.namespaces.contains(&qualifier)
+        {
+            let full = format!("{qualifier}::{}", name_token.text());
+            if here.table.get(&full).is_none() {
+                out.push(
+                    Diagnostic::new(LK0611, source, span_of(name_token)).label(format!(
+                        "namespace `{qualifier}` declares no `{}`",
+                        name_token.text()
+                    )),
+                );
+            }
+            continue;
+        }
+
+        let Some(target) = graph.import_target(id, &qualifier) else {
             out.push(
                 Diagnostic::new(LK0613, source, span_of(module_token))
-                    .label(format!(
-                        "`{}` names no imported module",
-                        module_token.text()
-                    ))
-                    .help(format!(
-                        "add `@import {}` to this file",
-                        module_token.text()
-                    )),
+                    .label(format!("`{qualifier}` names no imported module"))
+                    .help(format!("add `@import {qualifier}` to this file")),
             );
             continue;
         };
