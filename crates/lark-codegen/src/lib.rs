@@ -1431,7 +1431,7 @@ impl Emitter<'_> {
         let written = managed_emit::element_type(node).unwrap_or_default();
         // Rule N-4. `mod::Name` names a record of another module, and rule X-5
         // keeps only the name in the emitted C.
-        let (owner, name) = match written.split_once("::") {
+        let (owner, name) = match written.rsplit_once("::") {
             Some((module, name)) => (module.to_owned(), name.to_owned()),
             None => (self.module.name.clone(), written),
         };
@@ -2031,11 +2031,7 @@ impl Emitter<'_> {
 
     /// Turns `@import m` into `#include "m.h"`.
     fn write_include(&mut self, item: &SyntaxNode) {
-        let name = item
-            .children()
-            .find(|child| child.kind() == NAME)
-            .and_then(|node| node.first_token())
-            .map_or_else(String::new, |token| token.text().to_owned());
+        let name = names::import_path(item);
         let _ = write!(self.out, "#include \"{}\"", names::header_file(&name));
     }
 

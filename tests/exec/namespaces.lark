@@ -1,0 +1,22 @@
+// A module in a nested namespace.
+//
+// Rule N-16 makes a directory contribute one segment, so the file
+// `modules/geo/shapes.lark` is the module `geo::shapes`. Rule N-17 lets a
+// qualified name reach that depth.
+// covers: N-16, N-17, N-4, X-5, M-5a
+
+@import stdio
+@import geo::shapes
+
+init int main(void) {
+    // Rule M-5a. The descriptor lives in the other module, and the size must
+    // come from it, however deep the path is.
+    gc geo::shapes::Circle* c = new geo::shapes::Circle {
+        .radius = 4,
+        .weight = 7
+    };
+
+    stdio::printf("area %d\n", geo::shapes::area(c));
+    stdio::printf("fields %d %d\n", c->radius, c->weight);
+    return 0;
+}

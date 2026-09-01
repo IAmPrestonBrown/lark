@@ -7,8 +7,7 @@ use std::fmt::Write as _;
 
 use lark_resolve::Module;
 use lark_syntax::SyntaxKind::{
-    BLOCK_STMT, COMMA, EQ, IFACE_DEF, IMPORT_DIRECTIVE, INIT_DECLARATOR, NAME, SEMICOLON,
-    WHITESPACE,
+    BLOCK_STMT, COMMA, EQ, IFACE_DEF, IMPORT_DIRECTIVE, INIT_DECLARATOR, SEMICOLON, WHITESPACE,
 };
 use lark_syntax::{SyntaxNode, all_tokens};
 use lark_types::Managed;
@@ -17,6 +16,7 @@ use lark_types::iface::Interfaces;
 use crate::{iface_emit, managed_emit, names};
 
 /// Builds the header text for a module.
+#[must_use]
 pub fn header_text(
     module: &Module,
     managed: &Managed,
@@ -46,11 +46,7 @@ pub fn header_text(
         .children()
         .filter(|item| item.kind() == IMPORT_DIRECTIVE)
     {
-        let name = item
-            .children()
-            .find(|child| child.kind() == NAME)
-            .and_then(|node| node.first_token())
-            .map_or_else(String::new, |token| token.text().to_owned());
+        let name = names::import_path(&item);
         let _ = writeln!(out, "#include \"{}\"", names::header_file(&name));
         wrote_include = true;
     }

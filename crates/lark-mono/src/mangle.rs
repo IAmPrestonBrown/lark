@@ -63,10 +63,23 @@ pub fn argument(text: &str) -> String {
     }
 }
 
+/// Returns the prefix that every generated symbol of a module carries.
+///
+/// Rule N-16 makes a module name a path, and `::` is no part of a C
+/// identifier, so the separator becomes a pair of underscores. Rule X-5a
+/// reserves the `lk_` prefix, so no name the programmer wrote collides.
+///
+/// Every builder of a generated name goes through this, so no caller can
+/// forget the transformation.
+#[must_use]
+pub fn module_prefix(module: &str) -> String {
+    format!("lk_{}", module.replace("::", "__"))
+}
+
 /// Returns the C name of one instantiation. See rule X-5a.
 #[must_use]
 pub fn instance(module: &str, name: &str, arguments: &[String]) -> String {
-    format!("lk_{module}__{}", suffix(name, arguments))
+    format!("{}__{}", module_prefix(module), suffix(name, arguments))
 }
 
 /// Returns the part of an instantiation name that follows the module.

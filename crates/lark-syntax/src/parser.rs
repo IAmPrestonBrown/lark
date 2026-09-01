@@ -778,7 +778,12 @@ impl Parser<'_> {
                 self.bump();
                 self.bump();
                 if self.at(IDENT) {
-                    self.name();
+                    // Rule N-16. A directory contributes one segment, so an
+                    // import names a path rather than a single word.
+                    self.start(NAME);
+                    self.expect(IDENT);
+                    self.path_tail();
+                    self.finish();
                 } else {
                     self.error(LK0110);
                 }
@@ -1157,17 +1162,30 @@ impl Parser<'_> {
         result
     }
 
+    /// Consumes `::name` for as long as the input holds one.
+    ///
+    /// Rule N-17. A qualified name reaches any depth, because a namespace
+    /// nests inside another one. The last segment is the name, and every
+    /// segment before it is the path that holds it.
+    ///
+    /// Returns true when at least one segment followed.
+    fn path_tail(&mut self) -> bool {
+        let mut qualified = false;
+        while self.at(COLON2) {
+            self.bump();
+            self.expect(IDENT);
+            qualified = true;
+        }
+        qualified
+    }
+
     /// Parses a type name that a declaration refers to, with its arguments.
     ///
     /// The name can carry a module prefix, as in `stdio::FILE`. See rule N-2.
     fn type_name_ref(&mut self) {
         let checkpoint = self.checkpoint();
         self.bump();
-        let qualified = self.at(COLON2);
-        if qualified {
-            self.bump();
-            self.expect(IDENT);
-        }
+        let qualified = self.path_tail();
         self.wrap(checkpoint, if qualified { PATH } else { NAME_REF });
         if self.at(L_ANGLE) {
             self.generic_args();
@@ -1957,9 +1975,7 @@ impl Parser<'_> {
             return;
         }
         self.bump();
-        if self.at(COLON2) {
-            self.bump();
-            self.expect(IDENT);
+        if self.path_tail() {
             self.wrap(checkpoint, PATH);
         } else {
             self.wrap(checkpoint, NAME_REF);
@@ -2069,9 +2085,7 @@ impl Parser<'_> {
                 self.start(NAME_EXPR);
                 let checkpoint = self.checkpoint();
                 self.bump();
-                if self.at(COLON2) {
-                    self.bump();
-                    self.expect(IDENT);
+                if self.path_tail() {
                     self.wrap(checkpoint, PATH);
                 } else {
                     self.wrap(checkpoint, NAME_REF);

@@ -47,7 +47,7 @@ pub fn is_init_function(item: &SyntaxNode) -> bool {
 
 /// Returns the C name of the type descriptor for a record. See rule X-5a.
 pub fn typeinfo_name(module: &str, record: &str) -> String {
-    format!("lk_{module}__{record}__ti")
+    format!("{}__{record}__ti", lark_mono::mangle::module_prefix(module))
 }
 
 /// Returns a forward `typedef` for every record in a module. See rule X-8.

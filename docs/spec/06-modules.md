@@ -57,6 +57,44 @@ private type.
 **Rule N-11.** An import is never re-exported. If module `a` imports `b`, a
 module that imports `a` does not see `b`. It must import `b` itself.
 
+## 3a. Namespaces
+
+**Rule N-16.** A directory contributes one namespace segment, and the file stem
+contributes the last one. The file `std/collections.lark` is the module
+`std::collections`.
+
+```
+std/
+  collections.lark        -> std::collections
+  io/
+    file.lark             -> std::io::file
+```
+
+An import names the whole path, and the search of rule N-3 reads it as a
+directory path under each search root.
+
+```c
+@import std::collections
+@import std::io::file
+```
+
+**Rule N-17.** A qualified name reaches any depth. The last segment is the
+name, and every segment before it is the module that holds it.
+
+```c
+gc std::collections::Vector* items;
+std::io::file::open("notes.txt");
+```
+
+Rule X-5 keeps the last segment in the emitted C, so a name that reaches C
+carries no path.
+
+**Rule N-18.** Every generated file of a module carries the path with `::`
+replaced by two underscores, because no C identifier and no portable file name
+holds a colon. The module `std::collections` writes `std__collections.c` and
+`std__collections.lark.h`, and its generated symbols start with
+`lk_std__collections__`. Rule X-5a reserves that shape.
+
 ## 4. C symbols
 
 **Rule N-12.** A symbol from `#include` enters the global namespace, as C

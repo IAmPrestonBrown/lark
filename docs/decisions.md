@@ -1711,3 +1711,20 @@ declaration, which reported a syntax error at the first argument.
 between the name and the `for`. The scan counts a `>>` as two closes, and it
 stops at a token that no argument list holds, so a comparison never reads as a
 list.
+
+## D178 - A directory is a namespace segment
+**Status:** settled.
+**Reason:** A standard library is `std::collections::Vector`. A module name was
+one word, and a qualified name took exactly one `::`, so neither the file
+`std/collections.lark` nor the name that reaches into it could exist.
+**Method:** Rules N-16, N-17, and N-18. The loader maps `::` to a directory
+separator, so `@import std::collections` reads `std/collections.lark`. A path
+in the grammar loops rather than taking one segment, so it reaches any depth.
+
+Rule N-18 flattens the path for anything that C or a file system must hold.
+`lark_mono::mangle::module_prefix` owns that rule, and every builder of a
+generated name goes through it, so a file name and a symbol never disagree.
+
+Four places read only the first segment of a path and now read all of it: the
+generated include of a header, the same include in the emitted C, the C name
+of a qualified use, and the descriptor lookup of a `new`.

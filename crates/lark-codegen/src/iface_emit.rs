@@ -25,7 +25,7 @@ fn base(module: &str, iface: &str) -> String {
     if iface.starts_with("lk_") {
         iface.to_owned()
     } else {
-        format!("lk_{module}__{iface}")
+        format!("{}__{iface}", lark_mono::mangle::module_prefix(module))
     }
 }
 
@@ -56,7 +56,10 @@ pub fn vtable_name(module: &str, iface: &str, target: &str) -> String {
 
 /// Returns the C name of the interface table of a type.
 pub fn itable_name(module: &str, target: &str) -> String {
-    format!("lk_{module}__{target}__itabs")
+    format!(
+        "{}__{target}__itabs",
+        lark_mono::mangle::module_prefix(module)
+    )
 }
 
 /// Returns the declarations that one interface needs.

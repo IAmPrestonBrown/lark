@@ -154,7 +154,9 @@ impl FileLoader {
 
 impl SourceLoader for FileLoader {
     fn load(&self, name: &str, from: &Path) -> Option<(PathBuf, String)> {
-        let file = format!("{name}.lark");
+        // Rule N-16. A directory contributes one namespace segment, so
+        // `std::collections` names the file `std/collections.lark`.
+        let file = format!("{}.lark", name.replace("::", "/"));
         let mut directories = vec![from.to_path_buf()];
         directories.extend(self.search.iter().cloned());
         for directory in directories {

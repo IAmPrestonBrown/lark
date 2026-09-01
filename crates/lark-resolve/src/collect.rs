@@ -103,8 +103,18 @@ fn collect_import(item: &SyntaxNode, found: &mut Collected) {
     let Some(token) = name.first_token() else {
         return;
     };
+    // Rule N-16. `@import std::collections` names a path, and the whole path
+    // is the module name.
+    let text: String = lark_syntax::all_tokens(&name)
+        .filter(|item| !item.kind().is_trivia())
+        .map(|item| item.text().to_owned())
+        .collect();
     found.imports.push(Import {
-        name: token.text().to_owned(),
+        name: if text.is_empty() {
+            token.text().to_owned()
+        } else {
+            text
+        },
         span: span_of(&token),
     });
 }

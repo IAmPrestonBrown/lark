@@ -238,7 +238,12 @@ pub fn check(root: &Path, config: &Config) -> Result<Build, BuildError> {
         };
         outputs.push(ModuleOutput {
             name: module.name.clone(),
-            c_path: out_dir.join(format!("{}.c", module.name)),
+            // Rule N-16. Every generated file goes in one directory, so a
+            // module path flattens to one name.
+            c_path: out_dir.join(format!(
+                "{}.c",
+                lark_codegen::names::flat_module(&module.name)
+            )),
             header_path: out_dir.join(lark_codegen::names::header_file(&module.name)),
             emitted,
         });

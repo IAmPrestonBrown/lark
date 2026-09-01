@@ -1,0 +1,11 @@
+// A library in a nested namespace. The directory gives `geo::shapes`.
+// It is not a fixture itself.
+
+export managed struct Circle {
+    int radius;
+    int weight;
+}
+
+export int area(gc Circle* c) {
+    return 3 * c->radius * c->radius;
+}

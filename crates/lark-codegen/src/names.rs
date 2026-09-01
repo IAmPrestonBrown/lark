@@ -64,10 +64,11 @@ pub fn module_path_text(token: &SyntaxToken) -> Option<String> {
     let names: Vec<SyntaxToken> = child_tokens(&parent)
         .filter(|item| item.kind() == IDENT)
         .collect();
-    let [module, name] = names.as_slice() else {
-        return None;
-    };
-    if module.text_range() != token.text_range() {
+    // Rule N-17. A path reaches any depth, and rule X-5 keeps the last
+    // segment, so the first token stands for the whole path.
+    let (name, path) = names.split_last()?;
+    let first = path.first()?;
+    if first.text_range() != token.text_range() {
         return None;
     }
     Some(name.text().to_owned())
@@ -87,8 +88,10 @@ pub fn is_dropped_path_part(token: &SyntaxToken) -> bool {
     let names: Vec<SyntaxToken> = child_tokens(&parent)
         .filter(|item| item.kind() == IDENT)
         .collect();
-    match names.as_slice() {
-        [module, _] => token.text_range() != module.text_range(),
+    // Every token except the first goes, because the first one already stands
+    // for the whole path. See `module_path_text`.
+    match names.split_first() {
+        Some((first, rest)) if !rest.is_empty() => token.text_range() != first.text_range(),
         _ => false,
     }
 }
@@ -244,12 +247,59 @@ pub fn declarators_of(item: &SyntaxNode) -> Vec<SyntaxNode> {
 /// missing type rather than a shadowed file.
 #[must_use]
 pub fn header_file(module: &str) -> String {
-    format!("{module}.lark.h")
+    format!("{}.lark.h", flat_module(module))
+}
+
+/// Returns the module path that one `@import` directive names.
+///
+/// Rule N-16 makes the name a path, so every segment counts.
+#[must_use]
+pub fn import_path(item: &SyntaxNode) -> String {
+    item.children()
+        .find(|child| child.kind() == NAME)
+        .map(|node| {
+            lark_syntax::all_tokens(&node)
+                .filter(|token| !token.kind().is_trivia())
+                .map(|token| token.text().to_owned())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// Returns a module path as one file name segment.
+///
+/// Rule N-16 makes a module name a path, and the build writes every generated
+/// file into one directory, so the separator becomes a pair of underscores.
+/// Rule X-5a reserves that shape for a generated name, so no file the
+/// programmer wrote takes it.
+#[must_use]
+pub fn flat_module(module: &str) -> String {
+    // The mangler owns the rule, so a file name and a symbol never disagree.
+    lark_mono::mangle::module_prefix(module)
+        .strip_prefix(GENERATED_PREFIX)
+        .unwrap_or(module)
+        .to_owned()
 }
 
 #[cfg(test)]
 mod header_file_tests {
-    use super::header_file;
+    use super::{flat_module, header_file};
+
+    /// covers: N-18
+    #[test]
+    fn a_module_path_flattens_for_a_file_and_a_symbol() {
+        // No portable file name and no C identifier holds a colon.
+        assert_eq!(flat_module("std::collections"), "std__collections");
+        assert_eq!(header_file("std::collections"), "std__collections.lark.h");
+        // A plain module keeps its own name.
+        assert_eq!(flat_module("stdio"), "stdio");
+        assert_eq!(header_file("stdio"), "stdio.lark.h");
+        // Rule X-5a reserves the prefix, so the symbol side agrees.
+        assert_eq!(
+            lark_mono::mangle::module_prefix("std::collections"),
+            "lk_std__collections"
+        );
+    }
 
     /// covers: X-4b
     #[test]

@@ -12,10 +12,16 @@
 
 /// Returns the C name of the initializer for a block. See rule X-5a.
 pub fn init_name(module: &str, block: &str) -> String {
-    format!("lk_{module}__{block}__init")
+    format!(
+        "{}__{block}__init",
+        lark_mono::mangle::module_prefix(module)
+    )
 }
 
 /// Returns the C name of the guard flag for a block. See rule I-10.
 pub fn guard_name(module: &str, block: &str) -> String {
-    format!("lk_{module}__{block}__done")
+    format!(
+        "{}__{block}__done",
+        lark_mono::mangle::module_prefix(module)
+    )
 }

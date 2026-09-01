@@ -175,10 +175,13 @@ pub fn discover(root: &Path, kind: Kind) -> io::Result<Vec<Fixture>> {
         }
         // A file under `modules/` is a library that a fixture imports, not a
         // fixture of its own. The runner puts that folder on the search path.
+        //
+        // Rule N-16 puts a nested namespace in a subdirectory, so the check
+        // reads every ancestor rather than the immediate parent alone.
         if path
-            .parent()
-            .and_then(Path::file_name)
-            .is_some_and(|name| name == OsStr::new("modules"))
+            .ancestors()
+            .filter_map(Path::file_name)
+            .any(|name| name == OsStr::new("modules"))
         {
             return;
         }
