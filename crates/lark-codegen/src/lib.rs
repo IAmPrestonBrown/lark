@@ -30,6 +30,7 @@ mod iface_emit;
 mod managed_emit;
 pub mod names;
 pub mod reach;
+pub mod symbols;
 
 use std::fmt::Write as _;
 
@@ -310,6 +311,10 @@ pub fn emit(
         exported: exported_names(&root),
         locals: std::collections::BTreeMap::new(),
         namespaces: module.namespaces.clone(),
+        symbols: symbols::Symbols::with_declared(
+            &module.name,
+            module.table.iter().map(|item| item.name.clone()).collect(),
+        ),
         imported,
     };
     emitter.run();
@@ -370,6 +375,8 @@ struct Emitter<'a> {
     locals: std::collections::BTreeMap<String, (String, bool)>,
     /// Every namespace that a block of this module opens. See rule N-19.
     namespaces: std::collections::BTreeSet<String>,
+    /// The rule that decides the C name of a Lark name. See rule X-5.
+    symbols: symbols::Symbols,
     /// The managed records of every other module, by module name.
     ///
     /// Rule M-5a needs the descriptor of the record that a `new` names, and
@@ -451,7 +458,10 @@ impl Emitter<'_> {
             let has_itable = targets.iter().any(|target| target == &record.name);
             out.push('\n');
             out.push_str(&managed_emit::typeinfo_definition(
-                record, &module, has_itable,
+                record,
+                &module,
+                has_itable,
+                &self.symbols,
             ));
         }
 
@@ -554,7 +564,7 @@ impl Emitter<'_> {
         let _ = writeln!(self.out, "#include \"{}\"", names::header_file(&name));
         let _ = writeln!(self.out);
         // Rule X-8. Every record needs its name before any use of it.
-        let typedefs = managed_emit::forward_typedefs(&self.managed, None);
+        let typedefs = managed_emit::forward_typedefs(&self.managed, None, &self.symbols);
         if !typedefs.is_empty() {
             self.out.push_str(&typedefs);
         }
@@ -1485,7 +1495,13 @@ impl Emitter<'_> {
         } else {
             "&lark_bytes_type".to_owned()
         };
-        (name, descriptor, described || has_header)
+        // Rule X-5 decides the type that the allocation names, through the one
+        // rule that every path asks.
+        (
+            self.symbols.c_name(&owner, &name),
+            descriptor,
+            described || has_header,
+        )
     }
 
     /// Emits every `new` nested inside the initializer of one `new`.
@@ -1935,6 +1951,7 @@ impl Emitter<'_> {
             managed: self.managed.clone(),
             imported: self.imported.clone(),
             namespaces: self.namespaces.clone(),
+            symbols: self.symbols.clone(),
             interfaces: self.interfaces.clone(),
             globals: self.globals.clone(),
             foreign: self.foreign.clone(),
@@ -2004,6 +2021,7 @@ impl Emitter<'_> {
                 managed: self.managed.clone(),
                 imported: self.imported.clone(),
                 namespaces: self.namespaces.clone(),
+                symbols: self.symbols.clone(),
                 interfaces: self.interfaces.clone(),
                 globals: self.globals.clone(),
                 foreign: self.foreign.clone(),
@@ -2151,18 +2169,13 @@ impl Emitter<'_> {
             self.out.push_str(target);
             return;
         }
-        if names::is_dropped_marker(token) {
-            self.pending_skip_space = true;
-            return;
+        // Every name goes through one rule, whatever built the line.
+        let shadowed: std::collections::BTreeSet<String> = self.locals.keys().cloned().collect();
+        match self.symbols.token_with(token, &shadowed) {
+            symbols::Emit::SkipSpace => self.pending_skip_space = true,
+            symbols::Emit::Skip => {}
+            symbols::Emit::Text(text) => self.out.push_str(&text),
         }
-        if let Some(text) = names::module_path_text(token) {
-            self.out.push_str(&text);
-            return;
-        }
-        if names::is_dropped_path_part(token) {
-            return;
-        }
-        self.out.push_str(token.text());
     }
 
     /// Writes a `#line` directive for an item. See rule X-3.

@@ -1764,3 +1764,42 @@ function returns the written name until the switch flips. The change is then
 one edit inside one function, and its blast radius is visible before it runs.
 
 The attempt was reverted rather than left half applied.
+
+## D181 - One function decides every emitted name
+**Status:** settled.
+**Reason:** Decision D180 found that a name reaches the emitted C through
+paths that share no code. `crates/lark-codegen/src/symbols.rs` is now the one
+place that answers, and every path asks it.
+
+| Path | Asks |
+|---|---|
+| A token of the tree, in the emitted C | `Symbols::token_with` |
+| A token of the tree, in the generated header | `Symbols::token_with` |
+| A record typedef and a record descriptor | `Symbols::c_name` |
+| The element type of a `new` | `Symbols::c_name` |
+
+**Method:** Rule X-5 keeps the written name, so both answers are the identity
+and the gate stays green. A change to the rule is one edit inside one function.
+
+The refactor was proved rather than assumed. A probe replaced `c_name` with a
+mangling one and ran the suite. Every path agreed, which is what the refactor
+promised. One rule remained missing, and the probe named it precisely.
+
+## D182 - A declaration with no body keeps its C name
+**Status:** open. The next step of the ABI change.
+**Reason:** The probe above left 149 failures, and 80 came from one shape:
+
+```c
+export int printf(const char* restrict format, ...);
+```
+
+That is a binding to a symbol that the C library already defines. A mangled
+name for it names nothing, and the link fails.
+**Method:** A declaration with a body is Lark's own, so rule X-5 mangles it. A
+declaration with no body binds to an existing C symbol, so it keeps the written
+name. `@abi("C")` then covers the remaining case: a definition that a C caller
+must reach under a plain name.
+
+The implicit rule matters more than the attribute. Every foreign binding works
+with no annotation, which is what `examples/stdio.lark` and every header
+binding need.

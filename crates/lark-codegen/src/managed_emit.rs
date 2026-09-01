@@ -54,7 +54,11 @@ pub fn typeinfo_name(module: &str, record: &str) -> String {
 ///
 /// The typedef comes before every definition, so a field can name its own
 /// record and two records can name each other.
-pub fn forward_typedefs(managed: &Managed, needed: Option<&str>) -> String {
+pub fn forward_typedefs(
+    managed: &Managed,
+    needed: Option<&str>,
+    symbols: &crate::symbols::Symbols,
+) -> String {
     let mut out = String::new();
     for record in managed.records.values() {
         if record.generic {
@@ -70,8 +74,9 @@ pub fn forward_typedefs(managed: &Managed, needed: Option<&str>) -> String {
             continue;
         }
         // Rule X-8. The typedef repeats the keyword that the source used, so
-        // the tag namespace entry matches.
-        let name = &record.name;
+        // the tag namespace entry matches. Rule X-5 decides the name, through
+        // the one rule that every path asks.
+        let name = symbols.c_name(symbols.module(), &record.name);
         let keyword = record.keyword.text();
         let _ = writeln!(out, "typedef {keyword} {name} {name};");
     }
@@ -120,9 +125,14 @@ pub fn record_support(item: &SyntaxNode, managed: &Managed, module: &str, header
 }
 
 /// Returns the field map and the descriptor for one record. See rule M-5.
-pub fn typeinfo_definition(record: &Record, module: &str, has_itable: bool) -> String {
-    let name = &record.name;
-    let symbol = typeinfo_name(module, name);
+pub fn typeinfo_definition(
+    record: &Record,
+    module: &str,
+    has_itable: bool,
+    symbols: &crate::symbols::Symbols,
+) -> String {
+    let name = symbols.c_name(module, &record.name);
+    let symbol = typeinfo_name(module, &record.name);
     let managed_fields: Vec<&str> = record
         .managed_fields()
         .map(|field| field.name.as_str())
@@ -132,7 +142,7 @@ pub fn typeinfo_definition(record: &Record, module: &str, has_itable: bool) -> S
     let (itable_count, itable) = if has_itable {
         (
             "1u".to_owned(),
-            crate::iface_emit::itable_name(module, name),
+            crate::iface_emit::itable_name(module, &record.name),
         )
     } else {
         ("0u".to_owned(), "0".to_owned())

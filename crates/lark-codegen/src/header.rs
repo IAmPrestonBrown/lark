@@ -25,6 +25,10 @@ pub fn header_text(
     uses_runtime: bool,
 ) -> String {
     let guard = guard_name(&module.name);
+    let symbols = crate::symbols::Symbols::with_declared(
+        &module.name,
+        module.table.iter().map(|item| item.name.clone()).collect(),
+    );
     let mut out = String::new();
 
     let _ = writeln!(
@@ -57,7 +61,7 @@ pub fn header_text(
     // Rule X-8. Every record needs its name before any use of it. A generic
     // instantiation below can name a private record, so the header carries a
     // typedef for that one too. A forward typedef gives the name and no layout.
-    let typedefs = managed_emit::forward_typedefs(managed, Some(instances));
+    let typedefs = managed_emit::forward_typedefs(managed, Some(instances), &symbols);
     if !typedefs.is_empty() {
         out.push_str(&typedefs);
     }
@@ -91,7 +95,7 @@ pub fn header_text(
         if crate::generic_emit::declares_a_generic(&item) {
             continue;
         }
-        let text = declaration_of(&item);
+        let text = declaration_of(&item, &symbols);
         if text.trim().is_empty() {
             continue;
         }
@@ -112,7 +116,7 @@ pub fn header_text(
 /// Returns the declaration form of an item, with no body.
 ///
 /// A function definition becomes a prototype. A type definition stays whole.
-fn declaration_of(item: &SyntaxNode) -> String {
+fn declaration_of(item: &SyntaxNode, symbols: &crate::symbols::Symbols) -> String {
     let mut out = String::new();
     let mut skip_space = false;
 
@@ -142,18 +146,11 @@ fn declaration_of(item: &SyntaxNode) -> String {
         }
         skip_space = false;
 
-        if names::is_dropped_marker(&token) {
-            skip_space = true;
-            continue;
+        match symbols.token(&token) {
+            crate::symbols::Emit::SkipSpace => skip_space = true,
+            crate::symbols::Emit::Skip => {}
+            crate::symbols::Emit::Text(text) => out.push_str(&text),
         }
-        if let Some(text) = names::module_path_text(&token) {
-            out.push_str(&text);
-            continue;
-        }
-        if names::is_dropped_path_part(&token) {
-            continue;
-        }
-        out.push_str(token.text());
     }
 
     // A prototype and a record definition both end with a semicolon in C.

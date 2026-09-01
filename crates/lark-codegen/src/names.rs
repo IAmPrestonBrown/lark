@@ -75,6 +75,33 @@ pub fn module_path_text(token: &SyntaxToken) -> Option<String> {
     Some(name.text().to_owned())
 }
 
+/// Returns the module that a qualified use names.
+///
+/// The token must be the first of the path, the same as `module_path_text`.
+/// The two answer one question together: which module holds the name, and
+/// which name it is. Rule X-5 needs both.
+#[must_use]
+pub fn module_path_owner(token: &SyntaxToken) -> Option<String> {
+    let parent = token.parent()?;
+    if parent.kind() != PATH || is_member_path(&parent) {
+        return None;
+    }
+    let names: Vec<SyntaxToken> = child_tokens(&parent)
+        .filter(|item| item.kind() == IDENT)
+        .collect();
+    let (_, path) = names.split_last()?;
+    let first = path.first()?;
+    if first.text_range() != token.text_range() {
+        return None;
+    }
+    Some(
+        path.iter()
+            .map(|item| item.text().to_owned())
+            .collect::<Vec<_>>()
+            .join("::"),
+    )
+}
+
 /// Reports whether a token is a part of a module path that the emitter drops.
 ///
 /// The first name carries the whole path, so the `::` and the second name go.
